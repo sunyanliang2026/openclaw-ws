@@ -3,8 +3,8 @@
 import { ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 
+import { AppProviders } from '@/app/[locale]/app-providers';
 import { ChatLibrary } from '@/shared/blocks/chat/library';
-import { LocaleDetector } from '@/shared/blocks/common';
 import { DashboardLayout } from '@/shared/blocks/dashboard';
 import { ChatContextProvider } from '@/shared/contexts/chat';
 import { Sidebar as SidebarType } from '@/shared/types/blocks/dashboard';
@@ -17,11 +17,10 @@ export default function ChatLayout({ children }: { children: ReactNode }) {
   sidebar.library = <ChatLibrary />;
 
   return (
-    <ChatContextProvider>
-      <DashboardLayout sidebar={sidebar}>
-        <LocaleDetector />
-        {children}
-      </DashboardLayout>
-    </ChatContextProvider>
+    <AppProviders>
+      <ChatContextProvider>
+        <DashboardLayout sidebar={sidebar}>{children}</DashboardLayout>
+      </ChatContextProvider>
+    </AppProviders>
   );
 }

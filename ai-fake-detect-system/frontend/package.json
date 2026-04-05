@@ -18,11 +18,13 @@
     "ai-saas-development"
   ],
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
+    "dev:turbo": "next dev --turbopack",
     "build": "next build",
     "build:fast": "NODE_OPTIONS='--max-old-space-size=4096' next build",
     "start": "next start",
-    "lint": "eslint .",
+    "lint": "eslint src/lib/api.ts src/core/i18n/config.ts src/core/i18n/navigation.ts src/core/i18n/request.ts src/core/theme/provider.tsx src/app/layout.tsx src/app/[locale]/layout.tsx src/app/[locale]/app-providers.tsx src/app/api/detect/text/route.ts src/app/api/detect/image/route.ts \"src/app/[locale]/(landing)/layout.tsx\" \"src/app/[locale]/(demo)/page.tsx\" \"src/app/[locale]/(demo)/detect/page.tsx\" \"src/app/[locale]/(demo)/result/page.tsx\"",
+    "lint:full": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "db:generate": "tsx scripts/with-env.ts npx drizzle-kit generate --config=src/core/db/config.ts",

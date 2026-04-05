@@ -12,10 +12,33 @@ const withNextIntl = createNextIntlPlugin({
   requestConfig: './src/core/i18n/request.ts',
 });
 
+function normalizeAllowedDevOrigin(origin) {
+  const trimmed = origin.trim();
+  if (!trimmed) {
+    return '';
+  }
+
+  if (trimmed.includes('://')) {
+    try {
+      return new URL(trimmed).hostname;
+    } catch {
+      return trimmed;
+    }
+  }
+
+  return trimmed;
+}
+
+const allowedDevOrigins = (process.env.NEXT_ALLOWED_DEV_ORIGINS || '')
+  .split(',')
+  .map(normalizeAllowedDevOrigin)
+  .filter(Boolean);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: process.env.VERCEL ? undefined : 'standalone',
   reactStrictMode: false,
+  ...(allowedDevOrigins.length ? { allowedDevOrigins } : {}),
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   images: {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],

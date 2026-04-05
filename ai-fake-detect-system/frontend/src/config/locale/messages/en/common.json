@@ -1,8 +1,8 @@
 {
   "metadata": {
-    "title": "ShipAny Template Two",
-    "description": "ShipAny is a NextJS boilerplate for building AI SaaS startups. Ship Fast with a variety of templates and components.",
-    "keywords": "shipany, shipany-boilerplate, shipany-template-two-demo"
+    "title": "AI Fake Detect System",
+    "description": "A minimal demo system for detecting AI-generated text and image risks with explainable scoring and suspicious-point analysis.",
+    "keywords": "ai fake detect, ai text detection, ai image detection, fake content risk analysis"
   },
   "sign": {
     "sign_in_title": "Sign In",

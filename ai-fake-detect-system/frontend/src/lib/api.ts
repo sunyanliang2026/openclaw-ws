@@ -4,11 +4,11 @@ export type DetectResult = {
   risk_level: 'low' | 'medium' | 'high';
   score: number;
   points: string[];
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   message?: string;
 };
 
-const BASE_URL = 'http://127.0.0.1:5001';
+const DETECT_API_BASE_URL = '/api/detect';
 
 async function handleResponse(response: Response): Promise<DetectResult> {
   const data = await response.json();
@@ -21,7 +21,7 @@ async function handleResponse(response: Response): Promise<DetectResult> {
 }
 
 export async function detectText(content: string): Promise<DetectResult> {
-  const response = await fetch(`${BASE_URL}/detect/text`, {
+  const response = await fetch(`${DETECT_API_BASE_URL}/text`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -36,7 +36,7 @@ export async function detectImage(file: File): Promise<DetectResult> {
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await fetch(`${BASE_URL}/detect/image`, {
+  const response = await fetch(`${DETECT_API_BASE_URL}/image`, {
     method: 'POST',
     body: formData,
   });

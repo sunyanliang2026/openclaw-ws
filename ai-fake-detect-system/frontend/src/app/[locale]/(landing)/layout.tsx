@@ -1,17 +1,11 @@
 import { ReactNode } from 'react';
 
-import { ThemeProvider } from '@/core/theme/provider';
-import { LocaleDetector } from '@/shared/blocks/common';
+import { AppProviders } from '@/app/[locale]/app-providers';
 
 export default function LandingLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  return (
-    <ThemeProvider>
-      <LocaleDetector />
-      {children}
-    </ThemeProvider>
-  );
+  return <AppProviders>{children}</AppProviders>;
 }

@@ -1,8 +1,8 @@
 import { ReactNode } from 'react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
+import { AppProviders } from '@/app/[locale]/app-providers';
 import { requireAdminAccess } from '@/core/rbac/permission';
-import { LocaleDetector } from '@/shared/blocks/common';
 import { DashboardLayout } from '@/shared/blocks/dashboard/layout';
 import { getAllConfigs } from '@/shared/models/config';
 import { Sidebar as SidebarType } from '@/shared/types/blocks/dashboard';
@@ -46,9 +46,8 @@ export default async function AdminLayout({
   }
 
   return (
-    <DashboardLayout sidebar={sidebar}>
-      <LocaleDetector />
-      {children}
-    </DashboardLayout>
+    <AppProviders>
+      <DashboardLayout sidebar={sidebar}>{children}</DashboardLayout>
+    </AppProviders>
   );
 }
