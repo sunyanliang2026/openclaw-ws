@@ -23,6 +23,7 @@
     "build": "next build",
     "build:fast": "NODE_OPTIONS='--max-old-space-size=4096' next build",
     "start": "next start",
+    "test:api": "tsx --test --test-concurrency=1 src/app/api/detect/__tests__/route.test.ts",
     "lint": "eslint src/lib/api.ts src/core/i18n/config.ts src/core/i18n/navigation.ts src/core/i18n/request.ts src/core/theme/provider.tsx src/app/layout.tsx src/app/[locale]/layout.tsx src/app/[locale]/app-providers.tsx src/app/api/detect/text/route.ts src/app/api/detect/image/route.ts \"src/app/[locale]/(landing)/layout.tsx\" \"src/app/[locale]/(demo)/page.tsx\" \"src/app/[locale]/(demo)/detect/page.tsx\" \"src/app/[locale]/(demo)/result/page.tsx\"",
     "lint:full": "eslint .",
     "format": "prettier --write .",
