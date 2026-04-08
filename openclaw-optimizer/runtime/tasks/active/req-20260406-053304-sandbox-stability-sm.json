@@ -1,0 +1,58 @@
+{
+  "id": "req-20260406-053304-sandbox-stability-sm",
+  "projectId": "internal-openclaw",
+  "title": "sandbox-stability-smoke",
+  "type": "backend-feature",
+  "priority": "low",
+  "repoPath": "/home/ubuntu/.openclaw/workspace",
+  "branch": "feat/req-20260406-053304-sandbox-stability-sm",
+  "worktreePath": "/home/ubuntu/.openclaw/workspace/worktrees/req-20260406-053304-sandbox-stability-sm",
+  "agent": "codex",
+  "skills": [
+    "orchestrator",
+    "pr-quality-gate",
+    "failure-retry"
+  ],
+  "status": "ready_for_review",
+  "queueReason": null,
+  "queuedAt": null,
+  "maxRunMinutes": 180,
+  "maxQueueMinutes": 240,
+  "attemptCount": 0,
+  "maxAttempts": 3,
+  "createdAt": "2026-04-06T05:33:04-07:00",
+  "updatedAt": "2026-04-06T05:33:34-07:00",
+  "tmuxSession": null,
+  "nextRetryAtEpoch": null,
+  "prUrl": null,
+  "launch": {
+    "command": null,
+    "initialPrompt": "对 internal-openclaw 做一次最小 smoke：只运行 pwd 和 git status -sb，并输出命令与结果。",
+    "basePrompt": "对 internal-openclaw 做一次最小 smoke：只运行 pwd 和 git status -sb，并输出命令与结果。"
+  },
+  "verification": {
+    "testCommand": "",
+    "testsPassed": false,
+    "evidence": ""
+  },
+  "context": {
+    "project": "internal-openclaw",
+    "constraints": [
+      "Do not break current frontend API contract",
+      "Add regression tests for error responses"
+    ],
+    "successCriteria": [
+      "lint passes",
+      "tests pass",
+      "PR includes before/after behavior summary"
+    ]
+  },
+  "lastFailure": {
+    "time": null,
+    "reason": null,
+    "classification": null,
+    "promptAdjustment": null
+  },
+  "startedAt": "2026-04-06T05:33:06-07:00",
+  "finishedAt": "2026-04-06T05:33:21-07:00"
+}

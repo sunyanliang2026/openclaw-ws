@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "routing": {
+    "backend-feature": {
+      "primary": "codex",
+      "fallback": [
+        "claude"
+      ],
+      "reasoningEffort": "high"
+    },
+    "bug-fix": {
+      "primary": "codex",
+      "fallback": [
+        "claude"
+      ],
+      "reasoningEffort": "high"
+    },
+    "frontend-ui": {
+      "primary": "claude",
+      "fallback": [
+        "codex"
+      ],
+      "reasoningEffort": "medium"
+    },
+    "docs-changelog": {
+      "primary": "claude",
+      "fallback": [
+        "codex"
+      ],
+      "reasoningEffort": "low"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "codex",
+  "displayName": "Codex",
+  "model": "gpt-5.3-codex",
+  "capabilities": [
+    "backend-feature",
+    "bug-fix",
+    "multi-file-refactor"
+  ],
+  "launch": {
+    "command": "codex exec --dangerously-bypass-approvals-and-sandbox {{prompt}}"
+  }
+}

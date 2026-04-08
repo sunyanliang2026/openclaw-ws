@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "skills": [
+    {
+      "id": "orchestrator",
+      "description": "task decomposition and routing",
+      "appliesTo": ["backend-feature", "frontend-feature", "bug-fix"]
+    },
+    {
+      "id": "pr-quality-gate",
+      "description": "PR section and verification gate enforcement",
+      "appliesTo": ["backend-feature", "frontend-feature", "bug-fix", "docs-changelog"]
+    },
+    {
+      "id": "failure-retry",
+      "description": "failure classification and retry prompt adjustment",
+      "appliesTo": ["all"]
+    },
+    {
+      "id": "feishu-command-dispatch",
+      "description": "parse /newtask commands from Feishu websocket chat and dispatch to local task scripts",
+      "appliesTo": ["all"]
+    }
+  ]
+}

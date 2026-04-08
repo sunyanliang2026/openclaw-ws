@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "limits": {
+    "maxConcurrentAgents": 3,
+    "maxConcurrentBuilds": 1,
+    "memoryThresholdRatio": 0.8,
+    "swapThresholdRatio": 0.1
+  },
+  "policy": {
+    "whenMemoryHigh": "enqueue",
+    "whenBuildSlotsFull": "enqueue_build_tasks",
+    "whenAgentCrashed": {
+      "maxAttempts": 3,
+      "backoffSeconds": [
+        30,
+        120,
+        300
+      ]
+    }
+  }
+}

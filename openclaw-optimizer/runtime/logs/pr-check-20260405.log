@@ -1,0 +1,91 @@
+[2026-04-05T20:00:51-07:00] skip task=feat-ai-fake-api-hardening invalid repoPath=/home/ubuntu/.openclaw/workspace/ai-fake-detect-system
+[2026-04-05T20:00:51-07:00] pr-check completed
+[2026-04-05T20:01:10-07:00] task=feat-ai-fake-api-hardening no PR yet for branch=feat/api-hardening
+[2026-04-05T20:01:10-07:00] pr-check completed
+[2026-04-05T20:04:22-07:00] task=feat-ai-fake-api-hardening no PR yet for branch=feat/api-hardening
+[2026-04-05T20:04:22-07:00] pr-check completed
+[2026-04-05T20:05:01-07:00] task=feat-ai-fake-api-hardening no PR yet for branch=feat/api-hardening
+[2026-04-05T20:05:01-07:00] pr-check completed
+[2026-04-05T20:05:30-07:00] task=feat-ai-fake-api-hardening no PR yet for branch=feat/api-hardening
+[2026-04-05T20:05:30-07:00] pr-check completed
+[2026-04-05T20:10:39-07:00] task=feat-ai-fake-api-hardening no PR yet for branch=feat/api-hardening
+[2026-04-05T20:10:39-07:00] pr-check completed
+[2026-04-05T20:13:44-07:00] task=feat-ai-fake-api-hardening no PR yet for branch=feat/api-hardening
+[2026-04-05T20:13:44-07:00] pr-check completed
+[2026-04-05T20:15:02-07:00] task=feat-ai-fake-api-hardening no PR yet for branch=feat/api-hardening
+[2026-04-05T20:15:02-07:00] pr-check completed
+[2026-04-05T20:25:01-07:00] task=feat-ai-fake-api-hardening no PR yet for branch=feat/api-hardening
+[2026-04-05T20:25:01-07:00] pr-check completed
+[2026-04-05T20:26:42-07:00] task=feat-ai-fake-api-hardening no PR yet for branch=feat/api-hardening
+[2026-04-05T20:26:42-07:00] pr-check completed
+[2026-04-05T20:29:54-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T20:29:54-07:00] pr-check completed
+[2026-04-05T20:34:56-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T20:34:56-07:00] pr-check completed
+[2026-04-05T20:35:02-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T20:35:02-07:00] pr-check completed
+[2026-04-05T20:44:32-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T20:44:32-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T20:44:32-07:00] pr-check completed
+[2026-04-05T20:44:32-07:00] pr-check completed
+[2026-04-05T20:44:45-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T20:44:45-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T20:44:46-07:00] pr-check completed
+[2026-04-05T20:44:46-07:00] pr-check completed
+[2026-04-05T20:45:01-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T20:45:02-07:00] pr-check completed
+[2026-04-05T20:46:08-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T20:46:09-07:00] pr-check completed
+[2026-04-05T20:55:02-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T20:55:02-07:00] pr-check completed
+[2026-04-05T21:02:57-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T21:02:58-07:00] task=feat-ai-fake-api-hardening posted quality-gate comment on PR
+[2026-04-05T21:02:58-07:00] task=feat-ai-fake-api-hardening marked needs_update issues=missing_pr_section:Rollback
+[2026-04-05T21:02:58-07:00] pr-check completed
+[2026-04-05T21:03:13-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T21:03:14-07:00] task=feat-ai-fake-api-hardening marked needs_update issues=missing_pr_section:Rollback
+[2026-04-05T21:03:14-07:00] pr-check completed
+[2026-04-05T21:03:35-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T21:03:36-07:00] task=feat-ai-fake-api-hardening marked needs_update issues=missing_pr_section:Rollback
+[2026-04-05T21:03:36-07:00] pr-check completed
+[2026-04-05T21:03:44-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T21:03:45-07:00] task=feat-ai-fake-api-hardening marked needs_update issues=missing_pr_section:Rollback
+[2026-04-05T21:03:45-07:00] pr-check completed
+[2026-04-05T21:04:04-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T21:04:04-07:00] pr-check completed
+[2026-04-05T21:05:02-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T21:05:02-07:00] pr-check completed
+[2026-04-05T21:15:02-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T21:15:02-07:00] pr-check completed
+[2026-04-05T21:25:02-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T21:25:02-07:00] pr-check completed
+[2026-04-05T21:35:02-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T21:35:02-07:00] pr-check completed
+[2026-04-05T21:45:02-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T21:45:02-07:00] pr-check completed
+[2026-04-05T21:55:02-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T21:55:02-07:00] pr-check completed
+[2026-04-05T22:05:01-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T22:05:02-07:00] pr-check completed
+[2026-04-05T22:15:01-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T22:15:02-07:00] pr-check completed
+[2026-04-05T22:25:01-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T22:25:02-07:00] pr-check completed
+[2026-04-05T22:35:01-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T22:35:02-07:00] pr-check completed
+[2026-04-05T22:45:01-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T22:45:02-07:00] pr-check completed
+[2026-04-05T22:55:02-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T22:55:02-07:00] pr-check completed
+[2026-04-05T23:05:02-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T23:05:02-07:00] pr-check completed
+[2026-04-05T23:15:02-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T23:15:02-07:00] pr-check completed
+[2026-04-05T23:25:02-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T23:25:02-07:00] pr-check completed
+[2026-04-05T23:35:01-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T23:35:02-07:00] pr-check completed
+[2026-04-05T23:45:01-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T23:45:02-07:00] pr-check completed
+[2026-04-05T23:55:01-07:00] task=feat-ai-fake-api-hardening state=OPEN failed_checks=0 pending_checks=0 pr=https://github.com/sunyanliang2026/openclaw-ws/pull/1
+[2026-04-05T23:55:02-07:00] pr-check completed

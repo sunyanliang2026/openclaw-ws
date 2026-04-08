@@ -1,0 +1,58 @@
+{
+  "id": "req-20260406-051745-smoke-from-feishu-no",
+  "projectId": "internal-openclaw",
+  "title": "smoke-from-feishu-now",
+  "type": "backend-feature",
+  "priority": "low",
+  "repoPath": "/home/ubuntu/.openclaw/workspace",
+  "branch": "feat/req-20260406-051745-smoke-from-feishu-no",
+  "worktreePath": "/home/ubuntu/.openclaw/workspace/worktrees/req-20260406-051745-smoke-from-feishu-no",
+  "agent": "codex",
+  "skills": [
+    "orchestrator",
+    "pr-quality-gate",
+    "failure-retry"
+  ],
+  "status": "ready_for_review",
+  "queueReason": null,
+  "queuedAt": null,
+  "maxRunMinutes": 180,
+  "maxQueueMinutes": 240,
+  "attemptCount": 2,
+  "maxAttempts": 3,
+  "createdAt": "2026-04-06T05:17:45-07:00",
+  "updatedAt": "2026-04-06T05:32:51-07:00",
+  "tmuxSession": null,
+  "nextRetryAtEpoch": null,
+  "prUrl": null,
+  "launch": {
+    "command": null,
+    "initialPrompt": "对 internal-openclaw 做一次 smoke test，检查服务是否能启动、核心接口是否返回 2xx，并输出测试结果与失败项。\n\nRetry context:\n- attempt: 2\n- failure: tmux_session_not_alive\n- class: infra\n- guidance: Execution ended unexpectedly. Use smaller checkpoints, log progress every 2-3 steps, and verify after each checkpoint.\n\nConstraints:\n- Do not break current frontend API contract\n- Add regression tests for error responses\n\nSuccess criteria:\n- lint passes\n- tests pass\n- PR includes before/after behavior summary\n\nOutput requirement:\n- End with exact commands run and pass/fail results.",
+    "basePrompt": "对 internal-openclaw 做一次 smoke test，检查服务是否能启动、核心接口是否返回 2xx，并输出测试结果与失败项。"
+  },
+  "verification": {
+    "testCommand": "",
+    "testsPassed": false,
+    "evidence": ""
+  },
+  "context": {
+    "project": "internal-openclaw",
+    "constraints": [
+      "Do not break current frontend API contract",
+      "Add regression tests for error responses"
+    ],
+    "successCriteria": [
+      "lint passes",
+      "tests pass",
+      "PR includes before/after behavior summary"
+    ]
+  },
+  "lastFailure": {
+    "time": "2026-04-06T05:29:42-07:00",
+    "reason": "tmux_session_not_alive",
+    "classification": "infra",
+    "promptAdjustment": "adjusted_for_tmux_session_not_alive"
+  },
+  "startedAt": "2026-04-06T05:17:48-07:00",
+  "finishedAt": "2026-04-06T05:32:12-07:00"
+}

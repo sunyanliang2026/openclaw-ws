@@ -1,0 +1,56 @@
+{
+  "id": "feat-example-001",
+  "projectId": "internal-openclaw",
+  "title": "Example implementation task",
+  "type": "backend-feature",
+  "priority": "high",
+  "repoPath": "/home/ubuntu/.openclaw/workspace/ai-fake-detect-system",
+  "branch": "feat/example-001",
+  "worktreePath": "/home/ubuntu/.openclaw/workspace/worktrees/feat-example-001",
+  "agent": "codex",
+  "skills": [
+    "orchestrator",
+    "pr-quality-gate"
+  ],
+  "status": "pending",
+  "queueReason": null,
+  "queuedAt": null,
+  "maxRunMinutes": 180,
+  "maxQueueMinutes": 240,
+  "attemptCount": 0,
+  "maxAttempts": 3,
+  "createdAt": "2026-04-06T00:00:00Z",
+  "updatedAt": "2026-04-06T00:00:00Z",
+  "tmuxSession": null,
+  "nextRetryAtEpoch": null,
+  "prUrl": null,
+  "launch": {
+    "command": "codex exec --dangerously-bypass-approvals-and-sandbox",
+    "initialPrompt": "Describe the exact implementation task in one paragraph and then execute it.",
+    "basePrompt": "Describe the exact implementation task in one paragraph and then execute it."
+  },
+  "verification": {
+    "testCommand": "",
+    "testsPassed": false,
+    "evidence": ""
+  },
+  "context": {
+    "client": "Internal",
+    "meetingNotes": [],
+    "constraints": [
+      "Keep current API contracts",
+      "Add regression tests"
+    ],
+    "successCriteria": [
+      "lint passes",
+      "tests pass",
+      "PR includes test evidence"
+    ]
+  },
+  "lastFailure": {
+    "time": null,
+    "reason": null,
+    "classification": null,
+    "promptAdjustment": null
+  }
+}

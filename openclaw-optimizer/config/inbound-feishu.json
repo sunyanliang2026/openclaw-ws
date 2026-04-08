@@ -1,0 +1,15 @@
+{
+  "enabled": false,
+  "bindHost": "127.0.0.1",
+  "bindPort": 8787,
+  "path": "/feishu/webhook",
+  "authToken": "",
+  "defaultProjectId": "internal-openclaw",
+  "autoStart": true,
+  "defaultType": "backend-feature",
+  "defaultPriority": "medium",
+  "allowedChatIds": [],
+  "taskIdPrefix": "req",
+  "maxTitleLength": 80,
+  "maxPromptLength": 6000
+}

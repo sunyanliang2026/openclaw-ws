@@ -1,0 +1,25 @@
+{
+  "id": "internal-openclaw",
+  "name": "OpenClaw Workspace",
+  "repoPath": "/home/ubuntu/.openclaw/workspace",
+  "baseBranch": "main",
+  "worktreeRoot": "/home/ubuntu/.openclaw/workspace/worktrees",
+  "defaultTaskType": "backend-feature",
+  "defaultPriority": "high",
+  "defaultAgent": "codex",
+  "defaultPromptTemplate": "prompts/backend-feature-with-client-context.md",
+  "defaultSkills": [
+    "orchestrator",
+    "pr-quality-gate",
+    "failure-retry"
+  ],
+  "constraints": [
+    "Do not break current frontend API contract",
+    "Add regression tests for error responses"
+  ],
+  "successCriteria": [
+    "lint passes",
+    "tests pass",
+    "PR includes before/after behavior summary"
+  ]
+}

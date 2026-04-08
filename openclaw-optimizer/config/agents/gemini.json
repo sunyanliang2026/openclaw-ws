@@ -1,0 +1,12 @@
+{
+  "id": "gemini",
+  "displayName": "Gemini",
+  "model": "gemini-2.5-pro",
+  "capabilities": [
+    "ui-design",
+    "html-css-spec"
+  ],
+  "launch": {
+    "command": "gemini --prompt {{prompt}}"
+  }
+}

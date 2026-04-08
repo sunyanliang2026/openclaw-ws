@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "classes": {
+    "infra": {
+      "retryable": true,
+      "maxAttempts": 3,
+      "backoffSeconds": [
+        30,
+        120,
+        300
+      ]
+    },
+    "code": {
+      "retryable": true,
+      "maxAttempts": 2,
+      "backoffSeconds": [
+        120,
+        600,
+        1800
+      ]
+    },
+    "ci": {
+      "retryable": false,
+      "maxAttempts": 0,
+      "backoffSeconds": []
+    },
+    "auth": {
+      "retryable": false,
+      "maxAttempts": 0,
+      "backoffSeconds": []
+    },
+    "rate_limit": {
+      "retryable": true,
+      "maxAttempts": 3,
+      "backoffSeconds": [
+        300,
+        1800,
+        3600
+      ]
+    },
+    "unknown": {
+      "retryable": true,
+      "maxAttempts": 2,
+      "backoffSeconds": [
+        60,
+        300,
+        900
+      ]
+    }
+  }
+}

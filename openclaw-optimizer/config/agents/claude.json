@@ -1,0 +1,13 @@
+{
+  "id": "claude",
+  "displayName": "Claude Code",
+  "model": "claude-opus-4.5",
+  "capabilities": [
+    "frontend-feature",
+    "docs-changelog",
+    "quick-fix"
+  ],
+  "launch": {
+    "command": "claude --print {{prompt}}"
+  }
+}

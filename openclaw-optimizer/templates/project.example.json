@@ -1,0 +1,23 @@
+{
+  "id": "project-example",
+  "name": "Example Project",
+  "repoPath": "/abs/path/to/repo",
+  "baseBranch": "main",
+  "worktreeRoot": "/home/ubuntu/.openclaw/workspace/worktrees",
+  "defaultTaskType": "backend-feature",
+  "defaultPriority": "medium",
+  "defaultAgent": "codex",
+  "defaultPromptTemplate": "prompts/backend-feature-with-client-context.md",
+  "defaultSkills": [
+    "orchestrator",
+    "pr-quality-gate"
+  ],
+  "constraints": [
+    "keep API contracts",
+    "add regression tests"
+  ],
+  "successCriteria": [
+    "tests pass",
+    "PR includes validation evidence"
+  ]
+}

@@ -1,0 +1,1 @@
+{"finishedAt":"2026-04-08T00:39:34-07:00","exitCode":0,"command":"codex exec --dangerously-bypass-approvals-and-sandbox $' title: test-now-0558\\n project: internal-openclaw\\n type: backend-feature\\n priority: low\\n start: true\\n prompt: 只做连通性测试，执行 pwd 和 git status -sb，回传结果。'"}

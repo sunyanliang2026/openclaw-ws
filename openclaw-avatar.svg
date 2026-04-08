@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1020"/>
+      <stop offset="100%" stop-color="#111b38"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#5ee7ff" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#5ee7ff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="180" fill="url(#bg)"/>
+  <circle cx="512" cy="440" r="380" fill="none" stroke="#59e3ff" stroke-width="8" opacity="0.9"/>
+  <circle cx="512" cy="440" r="310" fill="none" stroke="#59e3ff" stroke-width="7" opacity="0.8"/>
+  <circle cx="512" cy="440" r="240" fill="none" stroke="#59e3ff" stroke-width="6" opacity="0.7"/>
+  <ellipse cx="512" cy="430" rx="170" ry="210" fill="#e7edf7"/>
+  <ellipse cx="512" cy="440" rx="135" ry="170" fill="#0f152a"/>
+  <circle cx="448" cy="389" r="26" fill="#5ee7ff"/>
+  <circle cx="576" cy="389" r="26" fill="#5ee7ff"/>
+  <path d="M452 506 Q512 548 572 506" fill="none" stroke="#5ee7ff" stroke-width="18" stroke-linecap="round"/>
+  <path d="M412 280 L370 245" stroke="#e7edf7" stroke-width="28" stroke-linecap="round"/>
+  <path d="M612 280 L654 245" stroke="#e7edf7" stroke-width="28" stroke-linecap="round"/>
+  <path d="M398 624 Q512 564 626 624 L676 812 Q512 902 348 812 Z" fill="#e7edf7"/>
+  <path d="M450 600 Q512 648 574 600" fill="none" stroke="#0f152a" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="512" cy="512" r="350" fill="url(#glow)"/>
+  <text x="512" y="936" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="54" fill="#cbd5e1">阿爪</text>
+</svg>

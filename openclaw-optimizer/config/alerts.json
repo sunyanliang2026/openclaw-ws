@@ -1,0 +1,17 @@
+{
+  "windowHours": 24,
+  "thresholds": {
+    "runTimeouts": 1,
+    "queueTimeouts": 1,
+    "ciFailedTransitions": 3,
+    "retryTransitions": 5
+  },
+  "notifications": {
+    "enabled": false,
+    "cooldownMinutes": 180,
+    "timeoutSeconds": 10,
+    "feishuWebhook": "",
+    "slackWebhook": "",
+    "genericWebhook": ""
+  }
+}

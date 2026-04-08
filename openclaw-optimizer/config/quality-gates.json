@@ -1,0 +1,16 @@
+{
+  "requiredPrSections": [
+    "Validation",
+    "Risk",
+    "Rollback"
+  ],
+  "requiredTaskFields": [
+    "verification.testCommand",
+    "verification.testsPassed"
+  ],
+  "requireTestsPassed": true,
+  "requireMergeable": true,
+  "maxBehindCommits": 20,
+  "autoCommentOnNeedsUpdate": true,
+  "commentTag": "openclaw-quality-gate"
+}

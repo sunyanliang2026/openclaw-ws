@@ -1,0 +1,82 @@
+OpenAI Codex v0.118.0 (research preview)
+--------
+workdir: /home/ubuntu/.openclaw/workspace/worktrees/req-20260406-052850-smoke-from-feishu-no
+model: gpt-5.3-codex
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR, /home/ubuntu/.codex/memories]
+reasoning effort: medium
+reasoning summaries: none
+session id: 019d62c7-1a06-79e1-aae5-451ca7942207
+--------
+user
+对 internal-openclaw 做一次 smoke test，检查服务是否能启动、核心接口是否返回 2xx，并输出测试结果与失败项。
+
+Retry context:
+- attempt: 1
+- failure: tmux_session_not_alive
+- class: infra
+- guidance: Execution ended unexpectedly. Use smaller checkpoints, log progress every 2-3 steps, and verify after each checkpoint.
+
+Constraints:
+- Do not break current frontend API contract
+- Add regression tests for error responses
+
+Success criteria:
+- lint passes
+- tests pass
+- PR includes before/after behavior summary
+
+Output requirement:
+- End with exact commands run and pass/fail results.
+codex
+先按你给的工作区规范完成会话启动检查：我会依次读取 `SOUL.md`、`USER.md`、今天和昨天的 `memory`，以及 `MEMORY.md`，然后再开始 `internal-openclaw` 的 smoke test。
+2026-04-06T12:31:55.339130Z ERROR codex_core::tools::router: error=exec_command failed for `/bin/bash -lc 'date +%F'`: CreateProcess { message: "Codex(Sandbox(Denied { output: ExecToolCallOutput { exit_code: 1, stdout: StreamOutput { text: \"\", truncated_after_lines: None }, stderr: StreamOutput { text: \"bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted\\n\", truncated_after_lines: None }, aggregated_output: StreamOutput { text: \"bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted\\n\", truncated_after_lines: None }, duration: 0ns, timed_out: false }, network_policy_decision: None }))" }
+2026-04-06T12:31:55.341397Z ERROR codex_core::tools::router: error=exec_command failed for `/bin/bash -lc 'ls -la'`: CreateProcess { message: "Codex(Sandbox(Denied { output: ExecToolCallOutput { exit_code: 1, stdout: StreamOutput { text: \"\", truncated_after_lines: None }, stderr: StreamOutput { text: \"bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted\\n\", truncated_after_lines: None }, aggregated_output: StreamOutput { text: \"bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted\\n\", truncated_after_lines: None }, duration: 0ns, timed_out: false }, network_policy_decision: None }))" }
+2026-04-06T12:31:55.367722Z ERROR codex_core::tools::router: error=exec_command failed for `/bin/bash -lc 'test -f SOUL.md && echo SOUL.md || true; test -f USER.md && echo USER.md || true; test -f MEMORY.md && echo MEMORY.md || true; ls -1 memory 2>/dev/null | tail -n 5 || true'`: CreateProcess { message: "Codex(Sandbox(Denied { output: ExecToolCallOutput { exit_code: 1, stdout: StreamOutput { text: \"\", truncated_after_lines: None }, stderr: StreamOutput { text: \"bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted\\n\", truncated_after_lines: None }, aggregated_output: StreamOutput { text: \"bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted\\n\", truncated_after_lines: None }, duration: 0ns, timed_out: false }, network_policy_decision: None }))" }
+codex
+当前被基础设施拦截了（`bwrap: loopback ... Operation not permitted`），我先做一个更小的探测：改用最小 shell 调用验证是否能执行任何本地命令，再决定是否继续测试流程。
+2026-04-06T12:31:59.575736Z ERROR codex_core::tools::router: error=exec_command failed for `/bin/sh -c pwd`: CreateProcess { message: "Codex(Sandbox(Denied { output: ExecToolCallOutput { exit_code: 1, stdout: StreamOutput { text: \"\", truncated_after_lines: None }, stderr: StreamOutput { text: \"bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted\\n\", truncated_after_lines: None }, aggregated_output: StreamOutput { text: \"bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted\\n\", truncated_after_lines: None }, duration: 0ns, timed_out: false }, network_policy_decision: None }))" }
+codex
+最小探测仍失败，说明当前会话无法启动任何 shell 进程。下一步我会检查是否有可用的 MCP 资源通道可读文件；如果也不可用，就需要你先修复执行环境后我再跑 smoke。
+mcp: codex/list_mcp_resources started
+mcp: codex/list_mcp_resources (completed)
+codex
+本次 smoke test 被基础设施阻断，未能进入仓库执行阶段，当前无法完成你要求的启动验证、核心接口 2xx 检查、lint/tests 与回归测试补充。
+
+失败项（本次 attempt=1）：
+1. `infra`：执行环境无法创建进程，统一报错 `bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`
+2. 因上述阻断，以下均未执行：
+1. 服务启动验证（internal-openclaw）
+2. 核心接口 2xx 验证
+3. 错误响应回归测试新增与运行
+4. lint/test 全量校验
+5. PR before/after 行为总结（需基于真实测试结果）
+
+建议先修复/重建当前 runner 的 sandbox 网络命名空间能力后，我会按你给的 checkpoint 方式（每 2-3 步记录一次）立即重跑。
+
+Exact commands run and pass/fail results:
+1. `ls -la` -> **FAIL** (`bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`)
+2. `date +%F` -> **FAIL** (`bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`)
+3. `test -f SOUL.md && echo SOUL.md || true; test -f USER.md && echo USER.md || true; test -f MEMORY.md && echo MEMORY.md || true; ls -1 memory 2>/dev/null | tail -n 5 || true` -> **FAIL** (`bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`)
+4. `pwd` (with `/bin/sh`, `login=false`) -> **FAIL** (`bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`)
+tokens used
+8,781
+本次 smoke test 被基础设施阻断，未能进入仓库执行阶段，当前无法完成你要求的启动验证、核心接口 2xx 检查、lint/tests 与回归测试补充。
+
+失败项（本次 attempt=1）：
+1. `infra`：执行环境无法创建进程，统一报错 `bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`
+2. 因上述阻断，以下均未执行：
+1. 服务启动验证（internal-openclaw）
+2. 核心接口 2xx 验证
+3. 错误响应回归测试新增与运行
+4. lint/test 全量校验
+5. PR before/after 行为总结（需基于真实测试结果）
+
+建议先修复/重建当前 runner 的 sandbox 网络命名空间能力后，我会按你给的 checkpoint 方式（每 2-3 步记录一次）立即重跑。
+
+Exact commands run and pass/fail results:
+1. `ls -la` -> **FAIL** (`bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`)
+2. `date +%F` -> **FAIL** (`bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`)
+3. `test -f SOUL.md && echo SOUL.md || true; test -f USER.md && echo USER.md || true; test -f MEMORY.md && echo MEMORY.md || true; ls -1 memory 2>/dev/null | tail -n 5 || true` -> **FAIL** (`bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`)
+4. `pwd` (with `/bin/sh`, `login=false`) -> **FAIL** (`bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`)

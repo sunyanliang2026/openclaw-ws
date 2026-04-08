@@ -117,6 +117,30 @@ Reactions are lightweight social signals. Humans use them constantly — they sa
 
 Skills provide your tools. When you need one, check its `SKILL.md`. Keep local notes (camera names, SSH details, voice preferences) in `TOOLS.md`.
 
+### Feishu /newtask Dispatch
+
+When a Feishu message starts with `/newtask`, treat it as a task creation command.
+
+Action rule:
+
+1. Pass the raw message text to:
+   `/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/feishu-command-dispatch.sh --text '<raw_message>'`
+2. Parse JSON response and reply with `replyText`.
+3. If `ok=false`, still reply with `replyText` and do not invent extra status.
+4. If `ok=true` and `tmuxSession` exists, include that value in the reply so the human can attach.
+
+Command schema reminder:
+
+```text
+/newtask
+title: ...
+project: internal-openclaw
+type: backend-feature|frontend-feature|bug-fix|docs-changelog
+priority: high|medium|low
+start: true|false
+prompt: ...
+```
+
 **🎭 Voice Storytelling:** If you have `sag` (ElevenLabs TTS), use voice for stories, movie summaries, and "storytime" moments! Way more engaging than walls of text. Surprise people with funny voices.
 
 **📝 Platform Formatting:**
