@@ -3,7 +3,7 @@
   "name": "OpenClaw Workspace",
   "repoPath": "/home/ubuntu/.openclaw/workspace",
   "baseBranch": "main",
-  "worktreeRoot": "/home/ubuntu/.openclaw/workspace/worktrees",
+  "worktreeRoot": "/home/ubuntu/workspace/worktrees",
   "defaultTaskType": "backend-feature",
   "defaultPriority": "high",
   "defaultAgent": "codex",
