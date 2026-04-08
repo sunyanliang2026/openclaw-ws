@@ -78,3 +78,15 @@
 {"ts":"2026-04-08T01:55:07-07:00","event":"pr_missing","taskId":"req-20260406-053304-sandbox-stability-sm","status":"ready_for_review","detail":"branch=feat/req-20260406-053304-sandbox-stability-sm"}
 {"ts":"2026-04-08T01:55:07-07:00","event":"pr_missing","taskId":"req-20260406-055833-title-test-now-0558","status":"ready_for_review","detail":"branch=feat/req-20260406-055833-title-test-now-0558"}
 {"ts":"2026-04-08T01:55:07-07:00","event":"pr_missing","taskId":"req-20260408-003901-title-test-now-0558","status":"ready_for_review","detail":"branch=feat/req-20260408-003901-title-test-now-0558"}
+{"ts":"2026-04-08T02:05:01-07:00","event":"pr_missing","taskId":"feat-ai-fake-api-hardening","status":"ready_for_review","detail":"branch=feat/api-hardening"}
+{"ts":"2026-04-08T02:05:02-07:00","event":"pr_missing","taskId":"req-20260406-051745-smoke-from-feishu-no","status":"ready_for_review","detail":"branch=feat/req-20260406-051745-smoke-from-feishu-no"}
+{"ts":"2026-04-08T02:05:02-07:00","event":"pr_missing","taskId":"req-20260406-052850-smoke-from-feishu-no","status":"ready_for_review","detail":"branch=feat/req-20260406-052850-smoke-from-feishu-no"}
+{"ts":"2026-04-08T02:05:03-07:00","event":"pr_missing","taskId":"req-20260406-053304-sandbox-stability-sm","status":"ready_for_review","detail":"branch=feat/req-20260406-053304-sandbox-stability-sm"}
+{"ts":"2026-04-08T02:05:03-07:00","event":"pr_missing","taskId":"req-20260406-055833-title-test-now-0558","status":"ready_for_review","detail":"branch=feat/req-20260406-055833-title-test-now-0558"}
+{"ts":"2026-04-08T02:05:04-07:00","event":"pr_missing","taskId":"req-20260408-003901-title-test-now-0558","status":"ready_for_review","detail":"branch=feat/req-20260408-003901-title-test-now-0558"}
+{"ts":"2026-04-08T02:15:02-07:00","event":"pr_missing","taskId":"feat-ai-fake-api-hardening","status":"ready_for_review","detail":"branch=feat/api-hardening"}
+{"ts":"2026-04-08T02:15:02-07:00","event":"pr_missing","taskId":"req-20260406-051745-smoke-from-feishu-no","status":"ready_for_review","detail":"branch=feat/req-20260406-051745-smoke-from-feishu-no"}
+{"ts":"2026-04-08T02:15:02-07:00","event":"pr_missing","taskId":"req-20260406-052850-smoke-from-feishu-no","status":"ready_for_review","detail":"branch=feat/req-20260406-052850-smoke-from-feishu-no"}
+{"ts":"2026-04-08T02:15:03-07:00","event":"pr_missing","taskId":"req-20260406-053304-sandbox-stability-sm","status":"ready_for_review","detail":"branch=feat/req-20260406-053304-sandbox-stability-sm"}
+{"ts":"2026-04-08T02:15:03-07:00","event":"pr_missing","taskId":"req-20260406-055833-title-test-now-0558","status":"ready_for_review","detail":"branch=feat/req-20260406-055833-title-test-now-0558"}
+{"ts":"2026-04-08T02:15:04-07:00","event":"pr_missing","taskId":"req-20260408-003901-title-test-now-0558","status":"ready_for_review","detail":"branch=feat/req-20260408-003901-title-test-now-0558"}
