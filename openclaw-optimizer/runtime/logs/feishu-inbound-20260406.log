@@ -1,4 +1,0 @@
-[2026-04-06T09:41:07.507738+00:00] feishu inbound server started on 127.0.0.1:8787/feishu/webhook
-[2026-04-06T09:41:08.293712+00:00] created task from feishu: {'taskId': 'req-20260406-024108-task', 'project': 'internal-openclaw', 'type': 'frontend-feature', 'priority': 'high', 'autoStart': False, 'started': False}
-[2026-04-06T09:41:08.293806+00:00] "POST /feishu/webhook?token=local-test-token HTTP/1.1" 200 -
-[2026-04-06T09:42:51.820831+00:00] feishu inbound server started on 0.0.0.0:8787/feishu/webhook
