@@ -3,3 +3,9 @@
 /ai-fake-detect-system/
 openclaw-optimizer/runtime/events/
 openclaw-optimizer/runtime/logs/
+openclaw-optimizer/runtime/locks/
+openclaw-optimizer/runtime/task-runs/
+openclaw-optimizer/runtime/tasks/active/
+openclaw-optimizer/runtime/tasks/completed/
+openclaw-optimizer/runtime/tasks/failed/
+openclaw-optimizer/runtime/tasks/stopped/
