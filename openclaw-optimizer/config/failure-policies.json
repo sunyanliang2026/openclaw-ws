@@ -2,7 +2,7 @@
   "version": 1,
   "retryGuard": {
     "maxRetryingTransitions": 3,
-    "archiveOnTrigger": false
+    "archiveOnTrigger": true
   },
   "classes": {
     "infra": {
