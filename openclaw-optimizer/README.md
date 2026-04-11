@@ -27,6 +27,7 @@ This folder distills practical ideas from `OpenClaw + Claude Code .pdf` into a m
 - `docs/adoption-plan.md`: step-by-step rollout plan for your current OpenClaw.
 - `docs/structure-upgrade.md`: scaling layout for new agent/skill/project/demand onboarding.
 - `docs/feishu-command-skill.md`: lightweight websocket command dispatch workflow.
+- `TODO.md`: prioritized roadmap for making this OpenClaw setup production-stable on this machine.
 
 ## Structure for scaling
 
