@@ -224,6 +224,7 @@ notify_target="$default_notify_target"
 notify_enabled="$default_notify_enabled"
 notify_set_by_input=0
 notify_target_set_by_input=0
+notify_warning=""
 
 if [[ -n "$start_override" ]]; then
   start_flag="$start_override"
@@ -356,8 +357,8 @@ fi
 notify_enabled="$notify_norm"
 
 if [[ "$notify_enabled" == "true" && -z "$notify_target" ]]; then
-  emit_error "invalid_notify_target" "notify is enabled but target is empty" "$notify_target" "Set notify_to: chat:<chatId> (or set notify: false)."
-  exit 1
+  notify_enabled="false"
+  notify_warning="notify disabled: missing target (provide notify_to or pass chat-id context)"
 fi
 
 for status_dir in active completed failed stopped archived; do
@@ -428,6 +429,9 @@ fi
 if [[ "$notify_enabled" == "true" ]]; then
   reply_text="${reply_text%.}; notify=${notify_channel}:${notify_target}."
 fi
+if [[ -n "$notify_warning" ]]; then
+  reply_text="${reply_text%.}; warning=$notify_warning."
+fi
 
 jq -cn \
   --arg taskId "$task_id" \
@@ -442,7 +446,8 @@ jq -cn \
   --arg notifyChannel "$notify_channel" \
   --arg notifyAccount "$notify_account" \
   --arg notifyTarget "$notify_target" \
+  --arg notifyWarning "$notify_warning" \
   --arg tmuxSession "$tmux_session" \
   --arg worktreePath "$worktree_path" \
   --arg replyText "$reply_text" \
-  '{ok:true,taskId:$taskId,project:$project,type:$type,priority:$priority,title:$title,started:($started=="true"),notify:{enabled:($notifyEnabled=="true"),channel:$notifyChannel,account:$notifyAccount,target:(if ($notifyTarget|length)>0 then $notifyTarget else null end)},tmuxSession:($tmuxSession | if .=="" then null else . end),worktreePath:$worktreePath,createOutput:$createOutput,startOutput:$startOutput,replyText:$replyText}'
+  '{ok:true,taskId:$taskId,project:$project,type:$type,priority:$priority,title:$title,started:($started=="true"),notify:{enabled:($notifyEnabled=="true"),channel:$notifyChannel,account:$notifyAccount,target:(if ($notifyTarget|length)>0 then $notifyTarget else null end),warning:(if ($notifyWarning|length)>0 then $notifyWarning else null end)},tmuxSession:($tmuxSession | if .=="" then null else . end),worktreePath:$worktreePath,createOutput:$createOutput,startOutput:$startOutput,replyText:$replyText}'
