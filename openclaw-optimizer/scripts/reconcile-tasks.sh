@@ -118,6 +118,14 @@ build_success_evidence() {
       + "- runLogFirstLine: " + $h)'
 }
 
+notify_task_file() {
+  local file="$1"
+  local event="${2:-status_changed}"
+  if [[ -x "$NOTIFY_TASK_COMPLETION_SCRIPT" && -f "$file" ]]; then
+    "$NOTIFY_TASK_COMPLETION_SCRIPT" --task-file "$file" --event "$event" "$ROOT" >> "$LOG_FILE" 2>&1 || true
+  fi
+}
+
 classify_failure_class() {
   local reason="$1"
   local status="$2"
@@ -256,11 +264,13 @@ for task_file in "$ACTIVE_DIR"/*.json; do
       "$task_file" > "$tmp"
     mv "$tmp" "$FAILED_DIR/$task_id.json"
     rm -f "$task_file"
+    notify_task_file "$FAILED_DIR/$task_id.json" "retry_guard_failed"
     log "retry guard triggered; marked failed: $task_id attempts=$attempts maxRetryingTransitions=$retry_guard_max"
     log_event "task_failed_retry_guard" "$task_id" "failed" "attempts=$attempts maxRetryingTransitions=$retry_guard_max"
 
     if [[ "$retry_guard_archive" == "true" && -x "$ARCHIVE_TASK_SCRIPT" ]]; then
       if "$ARCHIVE_TASK_SCRIPT" --force --reason infra-only --note "auto-archived by retry guard attempts=$attempts limit=$retry_guard_max" "$task_id" "$ROOT" >/dev/null 2>&1; then
+        notify_task_file "$ROOT/tasks/archived/$task_id.json" "retry_guard_archived"
         log "retry guard auto-archived task: $task_id"
         log_event "task_archived_retry_guard" "$task_id" "archived" "attempts=$attempts maxRetryingTransitions=$retry_guard_max"
       else
@@ -283,6 +293,7 @@ for task_file in "$ACTIVE_DIR"/*.json; do
         jq --arg now "$(date -Is)" '.status = "failed" | .updatedAt = $now | .lastFailure.reason = "run_timeout" | .lastFailure.time = $now' "$task_file" > "$tmp"
         mv "$tmp" "$FAILED_DIR/$task_id.json"
         rm -f "$task_file"
+        notify_task_file "$FAILED_DIR/$task_id.json" "run_timeout"
         log "task timed out in running state: $task_id"
         log_event "task_failed_timeout" "$task_id" "$status" "failure=run_timeout maxRunMinutes=$max_run_minutes"
         continue
@@ -303,6 +314,7 @@ for task_file in "$ACTIVE_DIR"/*.json; do
         jq --arg now "$(date -Is)" '.status = "failed" | .updatedAt = $now | .lastFailure.reason = "queue_timeout" | .lastFailure.time = $now' "$task_file" > "$tmp"
         mv "$tmp" "$FAILED_DIR/$task_id.json"
         rm -f "$task_file"
+        notify_task_file "$FAILED_DIR/$task_id.json" "queue_timeout"
         log "task timed out in queue state: $task_id"
         log_event "task_failed_timeout" "$task_id" "$status" "failure=queue_timeout maxQueueMinutes=$max_queue_minutes"
         continue
@@ -340,14 +352,13 @@ for task_file in "$ACTIVE_DIR"/*.json; do
         fi
         log "auto-completed legacy ready_for_review smoke/e2e task: $task_id"
         log_event "task_completed" "$task_id" "completed" "reason=legacy_ready_for_review_smoke_autoclose"
-        if [[ -x "$NOTIFY_TASK_COMPLETION_SCRIPT" ]]; then
-          "$NOTIFY_TASK_COMPLETION_SCRIPT" --task-file "$COMPLETED_DIR/$task_id.json" "$ROOT" >> "$LOG_FILE" 2>&1 || true
-        fi
+        notify_task_file "$COMPLETED_DIR/$task_id.json" "legacy_ready_for_review_smoke_autoclose"
         continue
       fi
       tmp="$(mktemp)"
       jq --arg now "$(date -Is)" --arg evidence "$evidence_text" '.verification.evidence = $evidence | .updatedAt = $now' "$task_file" > "$tmp"
       mv "$tmp" "$task_file"
+      notify_task_file "$task_file" "evidence_backfilled"
       log "backfilled verification evidence for task: $task_id"
       log_event "evidence_backfilled" "$task_id" "$status" "source=run_exit_file"
     fi
@@ -384,6 +395,7 @@ for task_file in "$ACTIVE_DIR"/*.json; do
         tmp="$(mktemp)"
         jq --arg now "$(date -Is)" '.status = "running" | .updatedAt = $now | .nextRetryAtEpoch = null' "$task_file" > "$tmp"
         mv "$tmp" "$task_file"
+        notify_task_file "$task_file" "normalized_running"
         log "normalized status to running: $task_id"
         log_event "status_changed" "$task_id" "running" "from=$status"
       fi
@@ -424,9 +436,7 @@ for task_file in "$ACTIVE_DIR"/*.json; do
           fi
           log "task process exited 0; auto-completed smoke/e2e task: $task_id"
           log_event "task_completed" "$task_id" "completed" "reason=process_exit_0_smoke_autoclose"
-          if [[ -x "$NOTIFY_TASK_COMPLETION_SCRIPT" ]]; then
-            "$NOTIFY_TASK_COMPLETION_SCRIPT" --task-file "$COMPLETED_DIR/$task_id.json" "$ROOT" >> "$LOG_FILE" 2>&1 || true
-          fi
+          notify_task_file "$COMPLETED_DIR/$task_id.json" "process_exit_0_smoke_autoclose"
         else
           jq \
             --arg now "$(date -Is)" \
@@ -440,6 +450,7 @@ for task_file in "$ACTIVE_DIR"/*.json; do
             | .verification.evidence = (if (.verification.evidence // "" | length) > 0 then .verification.evidence else $evidence end)' \
             "$task_file" > "$tmp"
           mv "$tmp" "$task_file"
+          notify_task_file "$task_file" "process_exit_0_ready_for_review"
           log "task process exited 0; marked ready_for_review with evidence: $task_id"
           log_event "status_changed" "$task_id" "ready_for_review" "reason=process_exit_0_evidence_backfilled"
         fi
@@ -482,6 +493,7 @@ for task_file in "$ACTIVE_DIR"/*.json; do
       "$task_file" > "$tmp"
     mv "$tmp" "$FAILED_DIR/$task_id.json"
     rm -f "$task_file"
+    notify_task_file "$FAILED_DIR/$task_id.json" "non_retryable_failed"
     log "marked failed (non-retryable class): $task_id class=$failure_class"
     log_event "task_failed" "$task_id" "failed" "reason=$failure_reason class=$failure_class retryable=false"
     continue
@@ -507,6 +519,7 @@ for task_file in "$ACTIVE_DIR"/*.json; do
       | .tmuxSession = null' \
       "$task_file" > "$tmp"
     mv "$tmp" "$task_file"
+    notify_task_file "$task_file" "retrying"
     log "marked retrying: $task_id attempt=$next_attempt/$effective_max_attempts class=$failure_class backoff=${backoff_seconds}s"
     log_event "status_changed" "$task_id" "retrying" "attempt=$next_attempt class=$failure_class backoff=${backoff_seconds}s"
 
@@ -532,6 +545,7 @@ for task_file in "$ACTIVE_DIR"/*.json; do
       "$task_file" > "$tmp"
     mv "$tmp" "$FAILED_DIR/$task_id.json"
     rm -f "$task_file"
+    notify_task_file "$FAILED_DIR/$task_id.json" "attempts_exhausted_failed"
     log "marked failed: $task_id class=$failure_class attempts_exhausted=$next_attempt/$effective_max_attempts"
     log_event "task_failed" "$task_id" "failed" "reason=$failure_reason class=$failure_class exhausted=true"
   fi

@@ -84,8 +84,8 @@ if [[ -x "$SUMMARY_SCRIPT" ]]; then
   "$SUMMARY_SCRIPT" --task-file "$dst_dir/$TASK_ID.json" --stage stopped "$ROOT" >/dev/null 2>&1 || true
 fi
 
-if [[ "$RESULT" == "completed" && -x "$NOTIFY_TASK_COMPLETION_SCRIPT" ]]; then
-  "$NOTIFY_TASK_COMPLETION_SCRIPT" --task-file "$dst_dir/$TASK_ID.json" "$ROOT" >/dev/null 2>&1 || true
+if [[ -x "$NOTIFY_TASK_COMPLETION_SCRIPT" ]]; then
+  "$NOTIFY_TASK_COMPLETION_SCRIPT" --task-file "$dst_dir/$TASK_ID.json" --event "stop_task_result_$RESULT" "$ROOT" >/dev/null 2>&1 || true
 fi
 
 echo "stopped task=$TASK_ID result=$RESULT"

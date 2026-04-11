@@ -24,6 +24,7 @@ RUN_DIR="$ROOT/task-runs/$TASK_ID"
 RUN_LOG="$RUN_DIR/run.log"
 RUN_EXIT_FILE="$RUN_DIR/exit.json"
 RUN_WRAPPER="$RUN_DIR/launch.sh"
+NOTIFY_TASK_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/notify-task-completion.sh"
 
 if [[ -z "$TASK_ID" ]]; then
   usage
@@ -106,6 +107,9 @@ mark_failed_preflight() {
     "$TASK_FILE" > "$tmp"
   mv "$tmp" "$FAILED_DIR/$TASK_ID.json"
   rm -f "$TASK_FILE"
+  if [[ -x "$NOTIFY_TASK_SCRIPT" ]]; then
+    "$NOTIFY_TASK_SCRIPT" --task-file "$FAILED_DIR/$TASK_ID.json" --event "preflight_failed" "$ROOT" >/dev/null 2>&1 || true
+  fi
   log_event "task_failed_preflight" "reason=$reason detail=$detail"
   echo "failed preflight task=$TASK_ID reason=$reason detail=$detail"
 }
@@ -226,6 +230,9 @@ if ! tmux has-session -t "$tmux_session" 2>/dev/null && (( alive_sessions >= max
     | .queueReason = $reason' \
     "$TASK_FILE" > "$tmp"
   mv "$tmp" "$TASK_FILE"
+  if [[ -x "$NOTIFY_TASK_SCRIPT" ]]; then
+    "$NOTIFY_TASK_SCRIPT" --task-file "$TASK_FILE" --event "queued_concurrency_limit" "$ROOT" >/dev/null 2>&1 || true
+  fi
   log_event "task_queued" "reason=concurrency_limit alive_sessions=$alive_sessions max=$max_concurrent_agents"
   echo "queued task=$TASK_ID reason=concurrency_limit alive_sessions=$alive_sessions max=$max_concurrent_agents"
   exit 0
@@ -294,5 +301,8 @@ jq \
   | .nextRetryAtEpoch = null' \
   "$TASK_FILE" > "$tmp"
 mv "$tmp" "$TASK_FILE"
+if [[ -x "$NOTIFY_TASK_SCRIPT" ]]; then
+  "$NOTIFY_TASK_SCRIPT" --task-file "$TASK_FILE" --event "task_started" "$ROOT" >/dev/null 2>&1 || true
+fi
 
 echo "started task=$TASK_ID session=$tmux_session"

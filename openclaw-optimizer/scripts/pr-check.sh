@@ -148,6 +148,14 @@ fetch_pr_field() {
   gh api "$api_path" --jq "$jq_expr" 2>/dev/null || echo ""
 }
 
+notify_task_file() {
+  local file="$1"
+  local event="${2:-status_changed}"
+  if [[ -x "$NOTIFY_TASK_COMPLETION_SCRIPT" && -f "$file" ]]; then
+    "$NOTIFY_TASK_COMPLETION_SCRIPT" --task-file "$file" --event "$event" "$ROOT" >> "$LOG_FILE" 2>&1 || true
+  fi
+}
+
 resolve_behind_count() {
   local repo_path="$1"
   local base_branch="$2"
@@ -207,9 +215,7 @@ for task_file in "$ACTIVE_DIR"/*.json; do
     fi
     log "task=$task_id moved to completed"
     log_event "task_completed" "$task_id" "completed" "reason=pr_merged"
-    if [[ -x "$NOTIFY_TASK_COMPLETION_SCRIPT" ]]; then
-      "$NOTIFY_TASK_COMPLETION_SCRIPT" --task-file "$COMPLETED_DIR/$task_id.json" "$ROOT" >> "$LOG_FILE" 2>&1 || true
-    fi
+    notify_task_file "$COMPLETED_DIR/$task_id.json" "pr_merged_completed"
     continue
   fi
 
@@ -218,6 +224,7 @@ for task_file in "$ACTIVE_DIR"/*.json; do
     jq --arg now "$(date -Is)" '.status = "failed" | .lastFailure.reason = "pr_closed_not_merged" | .lastFailure.classification = "code" | .updatedAt = $now' "$task_file" > "$tmp"
     mv "$tmp" "$FAILED_DIR/$task_id.json"
     rm -f "$task_file"
+    notify_task_file "$FAILED_DIR/$task_id.json" "pr_closed_not_merged"
     log "task=$task_id moved to failed (closed PR)"
     log_event "task_failed" "$task_id" "failed" "reason=pr_closed_not_merged"
     continue
@@ -227,6 +234,7 @@ for task_file in "$ACTIVE_DIR"/*.json; do
     tmp="$(mktemp)"
     jq --arg now "$(date -Is)" '.status = "ci_failed" | .lastFailure.reason = "ci_checks_failed" | .lastFailure.classification = "ci" | .updatedAt = $now' "$task_file" > "$tmp"
     mv "$tmp" "$task_file"
+    notify_task_file "$task_file" "ci_checks_failed"
     log_event "status_changed" "$task_id" "ci_failed" "failed_checks=$failed_checks"
     continue
   fi
@@ -323,6 +331,7 @@ Please update PR description/verification metadata and rerun checks."
       | .qualityGate.lastCommentFingerprint = $fp' \
       "$task_file" > "$tmp"
     mv "$tmp" "$task_file"
+    notify_task_file "$task_file" "needs_update"
     log "task=$task_id marked needs_update issues=$(IFS=,; echo "${quality_issues[*]}")"
     log_event "status_changed" "$task_id" "needs_update" "issues=$(IFS=,; echo "${quality_issues[*]}")"
     continue
@@ -332,11 +341,13 @@ Please update PR description/verification metadata and rerun checks."
     tmp="$(mktemp)"
     jq --arg now "$(date -Is)" '.status = "ready_for_review" | .updatedAt = $now | .qualityGate.passed = true | .qualityGate.checkedAt = $now | .qualityGate.issues = []' "$task_file" > "$tmp"
     mv "$tmp" "$task_file"
+    notify_task_file "$task_file" "quality_gate_ready_for_review"
     log_event "status_changed" "$task_id" "ready_for_review" "pending_checks=0"
   else
     tmp="$(mktemp)"
     jq --arg now "$(date -Is)" '.status = "ci_running" | .updatedAt = $now | .qualityGate.passed = true | .qualityGate.checkedAt = $now | .qualityGate.issues = []' "$task_file" > "$tmp"
     mv "$tmp" "$task_file"
+    notify_task_file "$task_file" "quality_gate_ci_running"
     log_event "status_changed" "$task_id" "ci_running" "pending_checks=$pending_checks"
   fi
 done

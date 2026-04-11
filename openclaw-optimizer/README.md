@@ -31,7 +31,7 @@ This folder distills practical ideas from `OpenClaw + Claude Code .pdf` into a m
 - `scripts/github-task-overview.sh`: one-command PR/checks/mergeability view for active tasks.
 - `scripts/verify-runtime-boundary.sh`: enforce runtime-vs-repo boundary by validating `.gitignore` and tracked files.
 - `scripts/write-task-summary.sh`: generate/update a normalized task summary artifact in `runtime/summaries/`.
-- `scripts/notify-task-completion.sh`: send completed-task summary back to Feishu (or configured channel target).
+- `scripts/notify-task-completion.sh`: send task status updates (running/retrying/review/failed/completed/archived) back to Feishu (or configured channel target).
 - `scripts/metrics-report.sh`: rolling metrics report from JSONL runtime events.
 - `scripts/alert-check.sh`: threshold-based alert checker using metrics report.
 - `docs/adoption-plan.md`: step-by-step rollout plan for your current OpenClaw.

@@ -36,6 +36,7 @@ done
 TASK_ID="${1:-}"
 ROOT="${2:-/home/ubuntu/.openclaw/workspace/openclaw-optimizer/runtime}"
 SUMMARY_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/write-task-summary.sh"
+NOTIFY_TASK_COMPLETION_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/notify-task-completion.sh"
 
 if [[ -z "$TASK_ID" ]]; then
   usage
@@ -118,6 +119,9 @@ rm -f "$source_file"
 
 if [[ -x "$SUMMARY_SCRIPT" ]]; then
   "$SUMMARY_SCRIPT" --task-file "$archived_dir/$TASK_ID.json" --stage archived "$ROOT" >/dev/null 2>&1 || true
+fi
+if [[ -x "$NOTIFY_TASK_COMPLETION_SCRIPT" ]]; then
+  "$NOTIFY_TASK_COMPLETION_SCRIPT" --task-file "$archived_dir/$TASK_ID.json" --event "task_archived_$ARCHIVE_REASON" "$ROOT" >/dev/null 2>&1 || true
 fi
 
 echo "archived task=$TASK_ID from=$source_dir reason=$ARCHIVE_REASON"
