@@ -23,9 +23,9 @@
       "reasoningEffort": "medium"
     },
     "docs-changelog": {
-      "primary": "claude",
+      "primary": "codex",
       "fallback": [
-        "codex"
+        "claude"
       ],
       "reasoningEffort": "low"
     }

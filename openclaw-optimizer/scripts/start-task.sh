@@ -18,6 +18,7 @@ AGENT_CONFIG_DIR="${AGENT_CONFIG_DIR:-/home/ubuntu/.openclaw/workspace/openclaw-
 LOG_DIR="$ROOT/logs"
 LOCK_DIR="$ROOT/locks"
 EVENT_DIR="$ROOT/events"
+FAILED_DIR="$ROOT/tasks/failed"
 EVENT_FILE="$EVENT_DIR/start-task-events-$(date +%Y%m%d).jsonl"
 RUN_DIR="$ROOT/task-runs/$TASK_ID"
 RUN_LOG="$RUN_DIR/run.log"
@@ -47,7 +48,7 @@ require_bin git
 require_bin tmux
 require_bin flock
 
-mkdir -p "$LOG_DIR" "$LOCK_DIR" "$EVENT_DIR"
+mkdir -p "$LOG_DIR" "$LOCK_DIR" "$EVENT_DIR" "$FAILED_DIR"
 
 log_event() {
   local event="$1"
@@ -58,6 +59,55 @@ log_event() {
     --arg task "$TASK_ID" \
     --arg detail "$detail" \
     '{ts:$ts,event:$event,taskId:$task,detail:$detail}' >> "$EVENT_FILE"
+}
+
+first_word() {
+  awk '{print $1}' <<< "$1"
+}
+
+command_available_for_launch() {
+  local cmd="$1"
+  local token
+  token="$(first_word "$cmd")"
+  [[ -n "$token" ]] || return 1
+  case "$token" in
+    bash|sh|zsh|fish|tmux)
+      return 0
+      ;;
+  esac
+  if [[ "$token" == */* ]]; then
+    [[ -x "$token" ]]
+    return $?
+  fi
+  command -v "$token" >/dev/null 2>&1
+}
+
+mark_failed_preflight() {
+  local reason="$1"
+  local detail="$2"
+  local now
+  now="$(date -Is)"
+  local tmp
+  tmp="$(mktemp)"
+  jq \
+    --arg now "$now" \
+    --arg reason "$reason" \
+    --arg detail "$detail" \
+    '.status = "failed"
+    | .updatedAt = $now
+    | .finishedAt = $now
+    | .tmuxSession = null
+    | .nextRetryAtEpoch = null
+    | .lastFailure.reason = $reason
+    | .lastFailure.classification = "infra"
+    | .lastFailure.time = $now
+    | .lastFailure.promptAdjustment = null
+    | .failureDetail = $detail' \
+    "$TASK_FILE" > "$tmp"
+  mv "$tmp" "$FAILED_DIR/$TASK_ID.json"
+  rm -f "$TASK_FILE"
+  log_event "task_failed_preflight" "reason=$reason detail=$detail"
+  echo "failed preflight task=$TASK_ID reason=$reason detail=$detail"
 }
 
 LOCK_FILE="$LOCK_DIR/start-task-$TASK_ID.lock"
@@ -128,6 +178,12 @@ if [[ -n "$initial_prompt" ]] && [[ "$launch_cmd" =~ ^codex([[:space:]]|$) ]]; t
     launch_cmd="$launch_cmd $quoted_prompt"
     initial_prompt=""
   fi
+fi
+
+if ! command_available_for_launch "$launch_cmd"; then
+  launch_token="$(first_word "$launch_cmd")"
+  mark_failed_preflight "agent_command_not_found" "launchCommand=$launch_cmd missingToken=$launch_token"
+  exit 0
 fi
 
 if [[ "$DRY_RUN" -eq 1 ]]; then
