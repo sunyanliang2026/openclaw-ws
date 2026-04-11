@@ -26,8 +26,9 @@ summary() {
   fi
 }
 
-mkdir -p "$ROOT/tasks/active" "$ROOT/tasks/completed" "$ROOT/tasks/failed" "$ROOT/tasks/stopped"
+mkdir -p "$ROOT/tasks/active" "$ROOT/tasks/completed" "$ROOT/tasks/failed" "$ROOT/tasks/stopped" "$ROOT/tasks/archived"
 summary "$ROOT/tasks/active" "active"
 summary "$ROOT/tasks/completed" "completed"
 summary "$ROOT/tasks/failed" "failed"
 summary "$ROOT/tasks/stopped" "stopped"
+summary "$ROOT/tasks/archived" "archived"

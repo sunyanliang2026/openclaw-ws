@@ -16,6 +16,7 @@ This folder distills practical ideas from `OpenClaw + Claude Code .pdf` into a m
 - `scripts/reconcile-tasks.sh`: deterministic monitor loop for task state updates.
 - `scripts/new-project.sh`: scaffold a new project manifest.
 - `scripts/new-task.sh`: scaffold a new task from project + requirement context.
+- `scripts/archive-task.sh`: move finished or discarded tasks into a durable archive with reason metadata.
 - `scripts/feishu-command-dispatch.sh`: parse `/newtask` commands from Feishu chat and dispatch task creation/start.
 - `scripts/validate-manifests.sh`: validate agent/skill/project/routing consistency.
 - `scripts/feishu-inbound-server.py`: receive Feishu demand messages and create tasks.
@@ -117,6 +118,7 @@ Runtime task folders:
 - `/home/ubuntu/.openclaw/workspace/openclaw-optimizer/runtime/tasks/active`
 - `/home/ubuntu/.openclaw/workspace/openclaw-optimizer/runtime/tasks/completed`
 - `/home/ubuntu/.openclaw/workspace/openclaw-optimizer/runtime/tasks/failed`
+- `/home/ubuntu/.openclaw/workspace/openclaw-optimizer/runtime/tasks/archived`
 
 Quality gate states:
 
@@ -149,10 +151,16 @@ Task launch helper:
 
 Default launch mode is non-interactive (`codex exec --full-auto`) to reduce approval stalls in tmux sessions.
 
-Stop and archive task:
+Stop task:
 
 ```bash
 /home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/stop-task.sh --keep-worktree --result stopped <task_id>
+```
+
+Archive a finished or discarded task:
+
+```bash
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/archive-task.sh --reason smoke-only <task_id>
 ```
 
 Run one full cycle manually:
