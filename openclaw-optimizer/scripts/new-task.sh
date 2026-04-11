@@ -109,6 +109,10 @@ fi
 repo_path="$(jq -r '.repoPath // empty' "$project_file")"
 worktree_root="$(jq -r '.worktreeRoot // "/home/ubuntu/.openclaw/workspace/worktrees"' "$project_file")"
 base_branch="$(jq -r '.baseBranch // "main"' "$project_file")"
+default_branch_prefix="$(jq -r '.defaultBranchPrefix // "feat"' "$project_file")"
+verification_command="$(jq -r '.verificationCommand // empty' "$project_file")"
+require_pr="$(jq -r '.requirePr // true' "$project_file")"
+smoke_task_no_branch="$(jq -r '.smokeTaskNoBranch // false' "$project_file")"
 
 if [[ -z "$task_type" ]]; then
   task_type="$(jq -r '.defaultTaskType // "backend-feature"' "$project_file")"
@@ -117,7 +121,11 @@ if [[ -z "$priority" ]]; then
   priority="$(jq -r '.defaultPriority // "medium"' "$project_file")"
 fi
 if [[ -z "$branch" ]]; then
-  branch="feat/$(slugify "$task_id")"
+  if [[ "$smoke_task_no_branch" == "true" && "$task_type" == "docs-changelog" ]]; then
+    branch="$base_branch"
+  else
+    branch="${default_branch_prefix}/$(slugify "$task_id")"
+  fi
 fi
 
 if [[ -z "$agent" && -f "$ROUTING_CONFIG" ]]; then
@@ -150,6 +158,9 @@ jq -cn \
   --arg now "$now_iso" \
   --arg prompt "$prompt_text" \
   --arg title "$title" \
+  --arg verifyCmd "$verification_command" \
+  --argjson requirePr "$require_pr" \
+  --argjson smokeNoBranch "$smoke_task_no_branch" \
   --argjson constraints "$(jq -c '.constraints // []' "$project_file")" \
   --argjson success "$(jq -c '.successCriteria // []' "$project_file")" \
   --argjson skills "$(jq -c '.defaultSkills // []' "$project_file")" \
@@ -182,9 +193,13 @@ jq -cn \
       basePrompt:$prompt
     },
     verification:{
-      testCommand:"",
+      testCommand:$verifyCmd,
       testsPassed:false,
       evidence:""
+    },
+    policy:{
+      requirePr:$requirePr,
+      smokeTaskNoBranch:$smokeNoBranch
     },
     context:{
       project:$project,

@@ -24,8 +24,12 @@ This folder distills practical ideas from `OpenClaw + Claude Code .pdf` into a m
 - `scripts/adjust-prompt.sh`: retry-time prompt adjustment based on failure reason.
 - `scripts/cleanup-worktrees.sh`: hourly orphan worktree cleanup with tmux safety checks.
 - `scripts/cleanup-archives.sh`: retention-based cleanup for archived tasks and stale run artifacts.
+- `scripts/lifecycle-audit.sh`: audit task lifecycle health and optionally auto-archive stale `ready_for_review` tasks.
 - `scripts/healthcheck.sh`: single-command machine/operator health check (auth, gateway, Feishu, ports, memory/swap, git).
 - `scripts/session-check.sh`: verify task/session consistency and optionally fix stale tmux bindings.
+- `scripts/session-manage.sh`: tmux session list/attach/orphan cleanup for operator use.
+- `scripts/github-task-overview.sh`: one-command PR/checks/mergeability view for active tasks.
+- `scripts/verify-runtime-boundary.sh`: enforce runtime-vs-repo boundary by validating `.gitignore` and tracked files.
 - `scripts/write-task-summary.sh`: generate/update a normalized task summary artifact in `runtime/summaries/`.
 - `scripts/metrics-report.sh`: rolling metrics report from JSONL runtime events.
 - `scripts/alert-check.sh`: threshold-based alert checker using metrics report.
@@ -201,6 +205,13 @@ Archive cleanup (keep last 14 days by default):
 /home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/cleanup-archives.sh --days 14
 ```
 
+Lifecycle audit (warn or auto-fix stale review tasks):
+
+```bash
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/lifecycle-audit.sh
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/lifecycle-audit.sh --fix --review-ttl-hours 72
+```
+
 Run a one-shot operator health check:
 
 ```bash
@@ -212,6 +223,25 @@ Check tmux/task session consistency:
 ```bash
 /home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/session-check.sh
 /home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/session-check.sh --fix
+```
+
+Session operator helper:
+
+```bash
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/session-manage.sh list
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/session-manage.sh kill-orphans
+```
+
+GitHub operator overview for active tasks:
+
+```bash
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/github-task-overview.sh
+```
+
+Runtime boundary verification:
+
+```bash
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/verify-runtime-boundary.sh
 ```
 
 Structured logs:

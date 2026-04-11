@@ -4,7 +4,7 @@ This file tracks the next practical upgrades for turning the current OpenClaw se
 
 ## P0: Make It Reliable
 
-- [ ] Standardize task lifecycle
+- [x] Standardize task lifecycle
   - Define one canonical flow: `create -> run -> review -> archive`.
   - Stop leaving finished or discarded work in `runtime/tasks/active`.
   - Make `ready_for_review` a transient state, not a parking lot.
@@ -14,12 +14,12 @@ This file tracks the next practical upgrades for turning the current OpenClaw se
   - Record why a task was archived: merged, abandoned, duplicate, smoke-only, infra-only.
   - Keep a minimal searchable history after archival.
 
-- [ ] Separate repo state from runtime state
+- [x] Separate repo state from runtime state
   - Keep Git tracking only config, templates, prompts, docs, and reusable scripts.
   - Treat locks, task-runs, temporary task manifests, session artifacts, and logs as runtime-only.
   - Periodically verify `.gitignore` still matches actual runtime output paths.
 
-- [ ] Formalize failure classification
+- [x] Formalize failure classification
   - Require every failed task to map to one of: `infra`, `auth`, `repo-state`, `code`, `ci`, `rate-limit`, `unknown`.
   - Store the classification on the task record.
   - Make retry behavior conditional on classification instead of generic retry.
@@ -31,7 +31,7 @@ This file tracks the next practical upgrades for turning the current OpenClaw se
 
 ## P1: Make It Efficient
 
-- [ ] Define per-project defaults beyond skills
+- [x] Define per-project defaults beyond skills
   - For each project, define default branch naming, worktree root, verification command, PR requirement, and cleanup policy.
   - Make smoke-only tasks opt out of unnecessary branch and PR flow.
 
@@ -53,19 +53,19 @@ This file tracks the next practical upgrades for turning the current OpenClaw se
 
 ## P2: Add Targeted Capability
 
-- [ ] Add a local healthcheck skill or equivalent workflow
+- [x] Add a local healthcheck skill or equivalent workflow
   - Cover service status, ports, auth state, disk, memory, swap, and gateway reachability.
   - Optimize for machine triage, not generic cloud monitoring.
 
-- [ ] Add a session-management skill or equivalent workflow
+- [x] Add a session-management skill or equivalent workflow
   - Support listing sessions, attaching, restarting failed sessions, and cleaning stale ones.
   - Reduce recurrence of session lifecycle failures.
 
-- [ ] Improve GitHub workflow integration
+- [x] Improve GitHub workflow integration
   - Make PR state, review comments, mergeability, and CI summary available through one operator path.
   - Avoid jumping between local git inspection and GitHub manually for routine checks.
 
-- [ ] Add project bootstrap templates
+- [x] Add project bootstrap templates
   - New projects should start with task schema, verification command, cleanup policy, and default orchestration rules already defined.
 
 ## Immediate Next Steps
@@ -73,4 +73,4 @@ This file tracks the next practical upgrades for turning the current OpenClaw se
 - [x] Implement archive/cleanup workflow first.
 - [x] Add a health check command second.
 - [x] Standardize tmux or session hosting third.
-- [ ] Revisit Feishu and GitHub workflow enhancements after the runtime loop is stable.
+- [x] Revisit Feishu and GitHub workflow enhancements after the runtime loop is stable.

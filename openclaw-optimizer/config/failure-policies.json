@@ -29,6 +29,11 @@
       "maxAttempts": 0,
       "backoffSeconds": []
     },
+    "repo-state": {
+      "retryable": false,
+      "maxAttempts": 0,
+      "backoffSeconds": []
+    },
     "rate_limit": {
       "retryable": true,
       "maxAttempts": 3,

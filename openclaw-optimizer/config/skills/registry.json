@@ -20,6 +20,21 @@
       "id": "feishu-command-dispatch",
       "description": "parse /newtask commands from Feishu websocket chat and dispatch to local task scripts",
       "appliesTo": ["all"]
+    },
+    {
+      "id": "healthcheck-workflow",
+      "description": "single-command operator triage for auth/gateway/channels/ports/resource/git health",
+      "appliesTo": ["all"]
+    },
+    {
+      "id": "session-management",
+      "description": "tmux session list/attach/orphan cleanup and stale binding checks",
+      "appliesTo": ["all"]
+    },
+    {
+      "id": "github-workflow-overview",
+      "description": "single-command GitHub PR/checks/mergeability summary for active tasks",
+      "appliesTo": ["all"]
     }
   ]
 }

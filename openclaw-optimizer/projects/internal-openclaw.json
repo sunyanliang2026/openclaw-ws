@@ -4,9 +4,13 @@
   "repoPath": "/home/ubuntu/.openclaw/workspace",
   "baseBranch": "main",
   "worktreeRoot": "/home/ubuntu/workspace/worktrees",
+  "defaultBranchPrefix": "feat",
   "defaultTaskType": "backend-feature",
   "defaultPriority": "high",
   "defaultAgent": "codex",
+  "verificationCommand": "",
+  "requirePr": true,
+  "smokeTaskNoBranch": false,
   "defaultPromptTemplate": "prompts/backend-feature-with-client-context.md",
   "defaultSkills": [
     "orchestrator",

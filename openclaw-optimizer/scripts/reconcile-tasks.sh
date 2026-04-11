@@ -78,6 +78,10 @@ classify_failure_class() {
     echo "auth"
     return 0
   fi
+  if [[ "$reason" =~ repo|worktree|branch|git ]]; then
+    echo "repo-state"
+    return 0
+  fi
   if [[ "$reason" =~ pr_closed_not_merged|tests_not_marked_passed|missing_pr_section|missing_task_field ]]; then
     echo "code"
     return 0
