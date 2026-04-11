@@ -10,6 +10,7 @@
   "defaultPriority": "medium",
   "completionNotify": {
     "enabled": false,
+    "autoFromChat": true,
     "channel": "feishu",
     "account": "main",
     "target": ""

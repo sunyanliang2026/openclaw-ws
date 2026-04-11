@@ -86,12 +86,20 @@ Feishu websocket command dispatch (recommended):
 /home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/feishu-command-dispatch.sh --text $'/newtask\ntitle: Build website v1\nproject: internal-openclaw\ntype: frontend-feature\npriority: high\nnotify: true\nnotify_channel: feishu\nnotify_account: main\nnotify_to: chat:oc_xxx\nprompt: Build pages and tests.'
 ```
 
+If your caller can pass chat context, you can skip `notify_to` and let dispatch auto-bind to sender chat:
+
+```bash
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/feishu-command-dispatch.sh --chat-id oc_xxx --text '.../newtask...'
+```
+
 `/newtask` supports optional completion callback keys:
 
 - `notify: true|false`
 - `notify_channel: feishu`
 - `notify_account: main`
 - `notify_to: chat:<chatId> | user:<openId>`
+
+With `completionNotify.autoFromChat=true` (default), inbound Feishu webhook requests auto-set completion callback to the originating chat.
 
 Feishu inbound HTTP bridge (fallback only):
 

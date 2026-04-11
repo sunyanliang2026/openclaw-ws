@@ -126,6 +126,15 @@ def extract_fields(text: str, cfg: dict) -> dict:
     }
 
 
+def normalize_chat_target(chat_id: str) -> str:
+    chat_id = (chat_id or "").strip()
+    if not chat_id:
+        return ""
+    if chat_id.startswith("chat:"):
+        return chat_id
+    return f"chat:{chat_id}"
+
+
 def run_cmd(args: list[str]) -> tuple[int, str, str]:
     p = subprocess.run(args, capture_output=True, text=True)
     return p.returncode, p.stdout.strip(), p.stderr.strip()
@@ -192,6 +201,16 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         fields = extract_fields(text, cfg)
+        completion_notify = cfg.get("completionNotify") or {}
+        notify_enabled = bool(completion_notify.get("enabled", False))
+        notify_channel = str(completion_notify.get("channel", "feishu") or "feishu")
+        notify_account = str(completion_notify.get("account", "main") or "main")
+        notify_target = str(completion_notify.get("target", "") or "")
+        auto_from_chat = bool(completion_notify.get("autoFromChat", True))
+        if auto_from_chat and chat_id:
+            notify_enabled = True
+            notify_target = normalize_chat_target(chat_id)
+
         new_task_args = [
             str(NEW_TASK_SCRIPT),
             "--project",
@@ -207,6 +226,17 @@ class Handler(BaseHTTPRequestHandler):
             "--prompt",
             fields["prompt"],
         ]
+        if notify_enabled and notify_target:
+            new_task_args.extend(
+                [
+                    "--notify-channel",
+                    notify_channel,
+                    "--notify-account",
+                    notify_account,
+                    "--notify-target",
+                    notify_target,
+                ]
+            )
         rc, out, err = run_cmd(new_task_args)
         if rc != 0:
             detail = {"taskId": fields["task_id"], "stdout": out, "stderr": err}
@@ -231,6 +261,8 @@ class Handler(BaseHTTPRequestHandler):
             "project": fields["project"],
             "type": fields["task_type"],
             "priority": fields["priority"],
+            "notifyEnabled": notify_enabled,
+            "notifyTarget": notify_target if notify_enabled else "",
             "autoStart": bool(cfg.get("autoStart", True)),
             "started": started,
         }
@@ -243,6 +275,8 @@ class Handler(BaseHTTPRequestHandler):
                 "taskId": fields["task_id"],
                 "project": fields["project"],
                 "started": started,
+                "notifyEnabled": notify_enabled,
+                "notifyTarget": notify_target if notify_enabled else "",
                 "createOutput": out,
                 "startOutput": start_out,
                 "startError": start_err,

@@ -19,8 +19,8 @@ ALLOWED_PRIORITIES=("high" "medium" "low")
 usage() {
   cat <<USAGE
 Usage:
-  $0 --text "<message>" [--start true|false]
-  $0 --file <path/to/message.txt> [--start true|false]
+  $0 --text "<message>" [--start true|false] [--chat-id <oc_xxx>]
+  $0 --file <path/to/message.txt> [--start true|false] [--chat-id <oc_xxx>]
 
 Command format:
   /newtask
@@ -110,6 +110,7 @@ normalize_bool() {
 msg_text=""
 msg_file=""
 start_override=""
+source_chat_id="${FEISHU_CHAT_ID:-}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -123,6 +124,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --start)
       start_override="${2:-}"
+      shift 2
+      ;;
+    --chat-id)
+      source_chat_id="${2:-}"
       shift 2
       ;;
     -h|--help)
@@ -165,6 +170,7 @@ default_notify_channel="feishu"
 default_notify_account="main"
 default_notify_target=""
 default_notify_enabled="false"
+default_notify_auto_from_chat="true"
 
 if [[ -f "$INBOUND_CONFIG" ]]; then
   if ! default_project="$(jq -r '.defaultProjectId // "internal-openclaw"' "$INBOUND_CONFIG" 2>/dev/null)"; then
@@ -199,6 +205,10 @@ if [[ -f "$INBOUND_CONFIG" ]]; then
     emit_error "config_parse_error" "failed to parse inbound config" "$INBOUND_CONFIG"
     exit 1
   fi
+  if ! default_notify_auto_from_chat="$(jq -r '.completionNotify.autoFromChat // true' "$INBOUND_CONFIG" 2>/dev/null)"; then
+    emit_error "config_parse_error" "failed to parse inbound config" "$INBOUND_CONFIG"
+    exit 1
+  fi
 fi
 
 project="$default_project"
@@ -213,6 +223,7 @@ notify_account="$default_notify_account"
 notify_target="$default_notify_target"
 notify_enabled="$default_notify_enabled"
 notify_set_by_input=0
+notify_target_set_by_input=0
 
 if [[ -n "$start_override" ]]; then
   start_flag="$start_override"
@@ -245,7 +256,10 @@ while IFS= read -r line; do
       start) start_flag="$val" ;;
       notify_channel|channel) notify_channel="$val" ;;
       notify_account|account) notify_account="$val" ;;
-      notify_to|notify_target|to|target) notify_target="$val" ;;
+      notify_to|notify_target|to|target)
+        notify_target="$val"
+        notify_target_set_by_input=1
+        ;;
       notify|notify_enabled)
         notify_enabled="$val"
         notify_set_by_input=1
@@ -284,9 +298,16 @@ notify_channel="$(trim_text "$notify_channel")"
 notify_account="$(trim_text "$notify_account")"
 notify_target="$(trim_text "$notify_target")"
 notify_enabled="$(trim_text "$notify_enabled")"
+source_chat_id="$(trim_text "$source_chat_id")"
+source_chat_id="${source_chat_id#chat:}"
 
-if [[ -n "$notify_target" && "$notify_set_by_input" -eq 0 && "$notify_target" != "$default_notify_target" ]]; then
+if [[ -n "$notify_target" && "$notify_target_set_by_input" -eq 1 && "$notify_set_by_input" -eq 0 ]]; then
   notify_enabled="true"
+fi
+
+if [[ "$default_notify_auto_from_chat" == "true" && -n "$source_chat_id" && "$notify_set_by_input" -eq 0 && "$notify_target_set_by_input" -eq 0 ]]; then
+  notify_enabled="true"
+  notify_target="chat:$source_chat_id"
 fi
 
 if [[ -z "$title" ]]; then
