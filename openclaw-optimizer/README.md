@@ -23,6 +23,7 @@ This folder distills practical ideas from `OpenClaw + Claude Code .pdf` into a m
 - `scripts/feishu-inbound.sh`: start/stop/status wrapper for Feishu inbound server.
 - `scripts/adjust-prompt.sh`: retry-time prompt adjustment based on failure reason.
 - `scripts/cleanup-worktrees.sh`: hourly orphan worktree cleanup with tmux safety checks.
+- `scripts/healthcheck.sh`: single-command machine/operator health check (auth, gateway, Feishu, ports, memory/swap, git).
 - `scripts/metrics-report.sh`: rolling metrics report from JSONL runtime events.
 - `scripts/alert-check.sh`: threshold-based alert checker using metrics report.
 - `docs/adoption-plan.md`: step-by-step rollout plan for your current OpenClaw.
@@ -180,6 +181,12 @@ Worktree cleanup:
 ```bash
 DRY_RUN=1 /home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/cleanup-worktrees.sh
 /home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/cleanup-worktrees.sh
+```
+
+Run a one-shot operator health check:
+
+```bash
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/healthcheck.sh
 ```
 
 Structured logs:
