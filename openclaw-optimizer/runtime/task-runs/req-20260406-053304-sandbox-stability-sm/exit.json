@@ -1,1 +1,0 @@
-{"finishedAt":"2026-04-06T05:33:21-07:00","exitCode":0,"command":"codex exec --dangerously-bypass-approvals-and-sandbox 对\\ internal-openclaw\\ 做一次最小\\ smoke：只运行\\ pwd\\ 和\\ git\\ status\\ -sb，并输出命令与结果。"}
