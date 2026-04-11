@@ -35,6 +35,7 @@ done
 
 TASK_ID="${1:-}"
 ROOT="${2:-/home/ubuntu/.openclaw/workspace/openclaw-optimizer/runtime}"
+SUMMARY_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/write-task-summary.sh"
 
 if [[ -z "$TASK_ID" ]]; then
   usage
@@ -114,5 +115,9 @@ jq \
 
 mv "$tmp" "$archived_dir/$TASK_ID.json"
 rm -f "$source_file"
+
+if [[ -x "$SUMMARY_SCRIPT" ]]; then
+  "$SUMMARY_SCRIPT" --task-file "$archived_dir/$TASK_ID.json" --stage archived "$ROOT" >/dev/null 2>&1 || true
+fi
 
 echo "archived task=$TASK_ID from=$source_dir reason=$ARCHIVE_REASON"

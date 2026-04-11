@@ -30,6 +30,7 @@ done
 
 TASK_ID="${1:-}"
 ROOT="${2:-/home/ubuntu/.openclaw/workspace/openclaw-optimizer/runtime}"
+SUMMARY_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/write-task-summary.sh"
 
 if [[ -z "$TASK_ID" ]]; then
   usage
@@ -77,5 +78,9 @@ tmp="$(mktemp)"
 jq --arg result "$RESULT" --arg now "$(date -Is)" '.status = $result | .updatedAt = $now' "$ACTIVE_FILE" > "$tmp"
 mv "$tmp" "$dst_dir/$TASK_ID.json"
 rm -f "$ACTIVE_FILE"
+
+if [[ -x "$SUMMARY_SCRIPT" ]]; then
+  "$SUMMARY_SCRIPT" --task-file "$dst_dir/$TASK_ID.json" --stage stopped "$ROOT" >/dev/null 2>&1 || true
+fi
 
 echo "stopped task=$TASK_ID result=$RESULT"

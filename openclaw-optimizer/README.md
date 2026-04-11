@@ -25,6 +25,7 @@ This folder distills practical ideas from `OpenClaw + Claude Code .pdf` into a m
 - `scripts/cleanup-worktrees.sh`: hourly orphan worktree cleanup with tmux safety checks.
 - `scripts/healthcheck.sh`: single-command machine/operator health check (auth, gateway, Feishu, ports, memory/swap, git).
 - `scripts/session-check.sh`: verify task/session consistency and optionally fix stale tmux bindings.
+- `scripts/write-task-summary.sh`: generate/update a normalized task summary artifact in `runtime/summaries/`.
 - `scripts/metrics-report.sh`: rolling metrics report from JSONL runtime events.
 - `scripts/alert-check.sh`: threshold-based alert checker using metrics report.
 - `docs/adoption-plan.md`: step-by-step rollout plan for your current OpenClaw.
@@ -121,6 +122,7 @@ Runtime task folders:
 - `/home/ubuntu/.openclaw/workspace/openclaw-optimizer/runtime/tasks/completed`
 - `/home/ubuntu/.openclaw/workspace/openclaw-optimizer/runtime/tasks/failed`
 - `/home/ubuntu/.openclaw/workspace/openclaw-optimizer/runtime/tasks/archived`
+- `/home/ubuntu/.openclaw/workspace/openclaw-optimizer/runtime/summaries`
 
 Quality gate states:
 
@@ -163,6 +165,13 @@ Archive a finished or discarded task:
 
 ```bash
 /home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/archive-task.sh --reason smoke-only <task_id>
+```
+
+Generate or refresh task summary manually:
+
+```bash
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/write-task-summary.sh \
+  --task-file /home/ubuntu/.openclaw/workspace/openclaw-optimizer/runtime/tasks/archived/<task_id>.json
 ```
 
 Run one full cycle manually:
