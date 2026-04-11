@@ -190,6 +190,7 @@ if [[ -n "$start_override" ]]; then
 fi
 
 first_line="$(printf '%s\n' "$msg_text" | sed -n '/./{p;q;}')"
+first_line="$(trim_text "$first_line")"
 if [[ ! "$first_line" =~ ^/newtask([[:space:]]|$) ]]; then
   emit_error "unsupported_command" "expected /newtask command prefix" "$first_line" "Start message with /newtask."
   exit 2
@@ -198,10 +199,12 @@ fi
 while IFS= read -r line; do
   line="${line//$'\r'/}"
   [[ -z "$line" ]] && continue
-  if [[ "$line" =~ ^/newtask([[:space:]]|$) ]]; then
+  line_clean="$(trim_text "$line")"
+  [[ -z "$line_clean" ]] && continue
+  if [[ "$line_clean" =~ ^/newtask([[:space:]]|$) ]]; then
     continue
   fi
-  if [[ "$line" =~ ^([A-Za-z_]+)[[:space:]]*[:：][[:space:]]*(.*)$ ]]; then
+  if [[ "$line_clean" =~ ^([A-Za-z_]+)[[:space:]]*[:：][[:space:]]*(.*)$ ]]; then
     key="$(tr '[:upper:]' '[:lower:]' <<< "${BASH_REMATCH[1]}")"
     val="$(trim_text "${BASH_REMATCH[2]}")"
     case "$key" in
@@ -220,17 +223,17 @@ while IFS= read -r line; do
         ;;
       *)
         if [[ -z "$prompt" ]]; then
-          prompt="$line"
+          prompt="$line_clean"
         else
-          prompt="$prompt"$'\n'"$line"
+          prompt="$prompt"$'\n'"$line_clean"
         fi
         ;;
     esac
   else
     if [[ -z "$prompt" ]]; then
-      prompt="$line"
+      prompt="$line_clean"
     else
-      prompt="$prompt"$'\n'"$line"
+      prompt="$prompt"$'\n'"$line_clean"
     fi
   fi
 done <<< "$msg_text"

@@ -27,7 +27,7 @@ log_event() {
   local task_id="${2:-}"
   local status="${3:-}"
   local detail="${4:-}"
-  jq -cn \
+  jq -r -cn \
     --arg ts "$(date -Is)" \
     --arg event "$event" \
     --arg taskId "$task_id" \
@@ -58,6 +58,62 @@ fi
 
 START_TASK_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/start-task.sh"
 ADJUST_PROMPT_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/adjust-prompt.sh"
+
+trim_text() {
+  awk '{gsub(/^[[:space:]]+|[[:space:]]+$/, ""); print}' <<< "$1"
+}
+
+is_smoke_auto_complete_candidate() {
+  local task_file="$1"
+  local title prompt policy_smoke
+  title="$(jq -r '.title // empty' "$task_file")"
+  prompt="$(jq -r '.launch.initialPrompt // .launch.basePrompt // empty' "$task_file")"
+  policy_smoke="$(jq -r '.policy.smokeTaskNoBranch // false' "$task_file")"
+  if [[ "$policy_smoke" == "true" ]]; then
+    return 0
+  fi
+  local haystack
+  haystack="$(tr '[:upper:]' '[:lower:]' <<< "$title"$'\n'"$prompt")"
+  if [[ "$haystack" =~ smoke|e2e|healthcheck|connectivity|链路验证|验证任务|start[[:space:]]*true ]]; then
+    return 0
+  fi
+  return 1
+}
+
+build_success_evidence() {
+  local task_file="$1"
+  local run_exit_file="$2"
+  local run_log_file="$3"
+  local started_at finished_at command log_hint
+  started_at="$(trim_text "$(jq -r '.startedAt // empty' "$task_file")")"
+  finished_at="$(trim_text "$(jq -r '.finishedAt // empty' "$task_file")")"
+  if [[ -z "$finished_at" ]]; then
+    finished_at="$(trim_text "$(jq -r '.finishedAt // empty' "$run_exit_file" 2>/dev/null || true)")"
+  fi
+  command="$(trim_text "$(jq -r '.command // empty' "$run_exit_file" 2>/dev/null || true)")"
+  log_hint="$(awk 'NF{print; exit}' "$run_log_file" 2>/dev/null || true)"
+  log_hint="$(trim_text "$log_hint")"
+  if [[ -z "$log_hint" ]]; then
+    log_hint="(run.log has no non-empty line)"
+  fi
+  jq -r -cn \
+    --arg startedAt "$started_at" \
+    --arg finishedAt "$finished_at" \
+    --arg command "$command" \
+    --arg runLog "$run_log_file" \
+    --arg logHint "$log_hint" \
+    '$startedAt as $s
+    | $finishedAt as $f
+    | $command as $c
+    | $runLog as $l
+    | $logHint as $h
+    | ("execution evidence\n"
+      + "- startedAt: " + (if ($s|length) > 0 then $s else "unknown" end) + "\n"
+      + "- finishedAt: " + (if ($f|length) > 0 then $f else "unknown" end) + "\n"
+      + "- command: " + (if ($c|length) > 0 then $c else "unknown" end) + "\n"
+      + "- runLog: " + $l + "\n"
+      + "- runLogFirstLine: " + $h)'
+}
 
 classify_failure_class() {
   local reason="$1"
@@ -156,6 +212,7 @@ for task_file in "$ACTIVE_DIR"/*.json; do
   created_at="$(jq -r '.createdAt // empty' "$task_file")"
   next_retry_at_epoch="$(jq -r '.nextRetryAtEpoch // empty' "$task_file")"
   run_exit_file="$ROOT/task-runs/$task_id/exit.json"
+  run_log_file="$ROOT/task-runs/$task_id/run.log"
 
   log "checking task=$task_id status=$status attempts=$attempts/$max_attempts"
   log_event "task_checked" "$task_id" "$status" "attempts=$attempts/$max_attempts"
@@ -208,6 +265,32 @@ for task_file in "$ACTIVE_DIR"/*.json; do
   fi
 
   if [[ "$status" == "ready_for_review" || "$status" == "needs_update" || "$status" == "ci_running" || "$status" == "ci_failed" ]]; then
+    evidence_existing="$(jq -r '.verification.evidence // empty' "$task_file")"
+    if [[ -z "$evidence_existing" && -f "$run_exit_file" ]]; then
+      exit_code_existing="$(jq -r '.exitCode // empty' "$run_exit_file" 2>/dev/null || true)"
+      evidence_text="$(build_success_evidence "$task_file" "$run_exit_file" "$run_log_file")"
+      if [[ "$status" == "ready_for_review" && "$exit_code_existing" == "0" ]] && is_smoke_auto_complete_candidate "$task_file"; then
+        tmp="$(mktemp)"
+        jq \
+          --arg now "$(date -Is)" \
+          --arg evidence "$evidence_text" \
+          '.status = "completed"
+          | .updatedAt = $now
+          | .completedAt = (.completedAt // $now)
+          | .verification.evidence = $evidence' \
+          "$task_file" > "$tmp"
+        mv "$tmp" "$COMPLETED_DIR/$task_id.json"
+        rm -f "$task_file"
+        log "auto-completed legacy ready_for_review smoke/e2e task: $task_id"
+        log_event "task_completed" "$task_id" "completed" "reason=legacy_ready_for_review_smoke_autoclose"
+        continue
+      fi
+      tmp="$(mktemp)"
+      jq --arg now "$(date -Is)" --arg evidence "$evidence_text" '.verification.evidence = $evidence | .updatedAt = $now' "$task_file" > "$tmp"
+      mv "$tmp" "$task_file"
+      log "backfilled verification evidence for task: $task_id"
+      log_event "evidence_backfilled" "$task_id" "$status" "source=run_exit_file"
+    fi
     if [[ -n "$tmux_session" ]]; then
       if tmux has-session -t "$tmux_session" 2>/dev/null; then
         tmux kill-session -t "$tmux_session" >/dev/null 2>&1 || true
@@ -255,19 +338,45 @@ for task_file in "$ACTIVE_DIR"/*.json; do
     finished_at="$(jq -r '.finishedAt // empty' "$run_exit_file" 2>/dev/null || true)"
     if [[ -n "$exit_code" ]]; then
       if [[ "$exit_code" == "0" ]]; then
+        evidence_text="$(build_success_evidence "$task_file" "$run_exit_file" "$run_log_file")"
+        auto_complete="false"
+        if is_smoke_auto_complete_candidate "$task_file"; then
+          auto_complete="true"
+        fi
         tmp="$(mktemp)"
-        jq \
-          --arg now "$(date -Is)" \
-          --arg finishedAt "$finished_at" \
-          '.status = "ready_for_review"
-          | .updatedAt = $now
-          | .tmuxSession = null
-          | .finishedAt = $finishedAt
-          | .nextRetryAtEpoch = null' \
-          "$task_file" > "$tmp"
-        mv "$tmp" "$task_file"
-        log "task process exited 0; marked ready_for_review: $task_id"
-        log_event "status_changed" "$task_id" "ready_for_review" "reason=process_exit_0"
+        if [[ "$auto_complete" == "true" ]]; then
+          jq \
+            --arg now "$(date -Is)" \
+            --arg finishedAt "$finished_at" \
+            --arg evidence "$evidence_text" \
+            '.status = "completed"
+            | .updatedAt = $now
+            | .tmuxSession = null
+            | .finishedAt = $finishedAt
+            | .completedAt = $now
+            | .nextRetryAtEpoch = null
+            | .verification.evidence = (if (.verification.evidence // "" | length) > 0 then .verification.evidence else $evidence end)' \
+            "$task_file" > "$tmp"
+          mv "$tmp" "$COMPLETED_DIR/$task_id.json"
+          rm -f "$task_file"
+          log "task process exited 0; auto-completed smoke/e2e task: $task_id"
+          log_event "task_completed" "$task_id" "completed" "reason=process_exit_0_smoke_autoclose"
+        else
+          jq \
+            --arg now "$(date -Is)" \
+            --arg finishedAt "$finished_at" \
+            --arg evidence "$evidence_text" \
+            '.status = "ready_for_review"
+            | .updatedAt = $now
+            | .tmuxSession = null
+            | .finishedAt = $finishedAt
+            | .nextRetryAtEpoch = null
+            | .verification.evidence = (if (.verification.evidence // "" | length) > 0 then .verification.evidence else $evidence end)' \
+            "$task_file" > "$tmp"
+          mv "$tmp" "$task_file"
+          log "task process exited 0; marked ready_for_review with evidence: $task_id"
+          log_event "status_changed" "$task_id" "ready_for_review" "reason=process_exit_0_evidence_backfilled"
+        fi
         continue
       fi
       failure_reason="agent_exit_code_$exit_code"
