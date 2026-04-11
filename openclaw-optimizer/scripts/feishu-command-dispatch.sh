@@ -8,6 +8,8 @@ NEW_TASK_SCRIPT="$ROOT_DIR/scripts/new-task.sh"
 START_TASK_SCRIPT="$ROOT_DIR/scripts/start-task.sh"
 EVENT_DIR="$RUNTIME_ROOT/events"
 EVENT_FILE="$EVENT_DIR/feishu-command-events-$(date +%Y%m%d).jsonl"
+LOCK_DIR="$RUNTIME_ROOT/locks"
+DISPATCH_LOCK_FILE="$LOCK_DIR/feishu-command-dispatch.lock"
 CMD_EXAMPLE="/newtask | title: ... | project: internal-openclaw | type: backend-feature | priority: medium | start: true | prompt: ..."
 PROJECT_DIR="$ROOT_DIR/projects"
 TASK_ROOT="$RUNTIME_ROOT/tasks"
@@ -76,6 +78,7 @@ emit_error() {
 }
 
 require_bin jq
+require_bin flock
 
 in_array() {
   local needle="$1"
@@ -140,6 +143,13 @@ fi
 
 if [[ -z "$msg_text" ]]; then
   usage
+  exit 1
+fi
+
+mkdir -p "$LOCK_DIR" "$EVENT_DIR"
+exec 9>"$DISPATCH_LOCK_FILE"
+if ! flock -n 9; then
+  emit_error "dispatcher_busy" "another /newtask dispatch is in progress" "$DISPATCH_LOCK_FILE" "Retry in a few seconds."
   exit 1
 fi
 
