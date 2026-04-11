@@ -58,6 +58,7 @@ fi
 
 START_TASK_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/start-task.sh"
 ADJUST_PROMPT_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/adjust-prompt.sh"
+ARCHIVE_TASK_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/archive-task.sh"
 
 trim_text() {
   awk '{gsub(/^[[:space:]]+|[[:space:]]+$/, ""); print}' <<< "$1"
@@ -187,6 +188,22 @@ policy_backoff_seconds_for_attempt() {
   fi
 }
 
+policy_retry_guard_max_transitions() {
+  if [[ -f "$FAILURE_POLICY_CONFIG" ]]; then
+    jq -r '.retryGuard.maxRetryingTransitions // 3' "$FAILURE_POLICY_CONFIG"
+  else
+    echo "3"
+  fi
+}
+
+policy_retry_guard_archive_on_trigger() {
+  if [[ -f "$FAILURE_POLICY_CONFIG" ]]; then
+    jq -r '.retryGuard.archiveOnTrigger // false' "$FAILURE_POLICY_CONFIG"
+  else
+    echo "false"
+  fi
+}
+
 parse_iso_epoch() {
   local iso="$1"
   if [[ -z "$iso" || "$iso" == "null" ]]; then
@@ -211,11 +228,46 @@ for task_file in "$ACTIVE_DIR"/*.json; do
   queued_at="$(jq -r '.queuedAt // empty' "$task_file")"
   created_at="$(jq -r '.createdAt // empty' "$task_file")"
   next_retry_at_epoch="$(jq -r '.nextRetryAtEpoch // empty' "$task_file")"
+  retry_guard_max="$(policy_retry_guard_max_transitions)"
+  retry_guard_archive="$(policy_retry_guard_archive_on_trigger)"
   run_exit_file="$ROOT/task-runs/$task_id/exit.json"
   run_log_file="$ROOT/task-runs/$task_id/run.log"
 
   log "checking task=$task_id status=$status attempts=$attempts/$max_attempts"
   log_event "task_checked" "$task_id" "$status" "attempts=$attempts/$max_attempts"
+
+  if [[ "$status" == "retrying" ]] && [[ "$retry_guard_max" =~ ^[0-9]+$ ]] && (( retry_guard_max >= 0 )) && (( attempts >= retry_guard_max )); then
+    tmp="$(mktemp)"
+    jq \
+      --arg now "$(date -Is)" \
+      --arg reason "retry_exhausted_by_policy" \
+      --arg klass "infra" \
+      --argjson maxTransitions "$retry_guard_max" \
+      '.status = "failed"
+      | .updatedAt = $now
+      | .lastFailure.reason = $reason
+      | .lastFailure.classification = $klass
+      | .lastFailure.time = $now
+      | .failureDetail = ("retrying transitions reached policy limit: " + ($maxTransitions|tostring))
+      | .nextRetryAtEpoch = null
+      | .tmuxSession = null' \
+      "$task_file" > "$tmp"
+    mv "$tmp" "$FAILED_DIR/$task_id.json"
+    rm -f "$task_file"
+    log "retry guard triggered; marked failed: $task_id attempts=$attempts maxRetryingTransitions=$retry_guard_max"
+    log_event "task_failed_retry_guard" "$task_id" "failed" "attempts=$attempts maxRetryingTransitions=$retry_guard_max"
+
+    if [[ "$retry_guard_archive" == "true" && -x "$ARCHIVE_TASK_SCRIPT" ]]; then
+      if "$ARCHIVE_TASK_SCRIPT" --force --reason infra-only --note "auto-archived by retry guard attempts=$attempts limit=$retry_guard_max" "$task_id" "$ROOT" >/dev/null 2>&1; then
+        log "retry guard auto-archived task: $task_id"
+        log_event "task_archived_retry_guard" "$task_id" "archived" "attempts=$attempts maxRetryingTransitions=$retry_guard_max"
+      else
+        log "retry guard archive failed: $task_id"
+        log_event "task_archive_retry_guard_failed" "$task_id" "failed" "attempts=$attempts maxRetryingTransitions=$retry_guard_max"
+      fi
+    fi
+    continue
+  fi
 
   if (( max_run_minutes > 0 )) && [[ "$status" == "running" ]]; then
     started_epoch="$(parse_iso_epoch "$started_at")"

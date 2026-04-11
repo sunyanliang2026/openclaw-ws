@@ -145,6 +145,8 @@ Retry behavior:
 - Current failure-specific rewrites: `tmux_session_not_alive`, `ci_failed`, default fallback.
 - Retry is non-blocking: reconcile writes `nextRetryAtEpoch` and exits; next scheduler turn handles relaunch.
 - Retry routing is class-aware (`infra/code/ci/auth/rate_limit/unknown`) and controlled by `config/failure-policies.json`.
+- Retry guard is also policy-driven: when `retrying` transitions hit `retryGuard.maxRetryingTransitions`, task is auto-marked `failed` (`reason=retry_exhausted_by_policy`), and optionally auto-archived when `retryGuard.archiveOnTrigger=true`.
+- Launch preflight blocks missing agent binaries early (`agent_command_not_found`) to prevent noisy retry loops.
 
 SLA controls (per task JSON):
 
