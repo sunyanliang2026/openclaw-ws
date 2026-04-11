@@ -9,3 +9,4 @@ openclaw-optimizer/runtime/tasks/active/
 openclaw-optimizer/runtime/tasks/completed/
 openclaw-optimizer/runtime/tasks/failed/
 openclaw-optimizer/runtime/tasks/stopped/
+openclaw-optimizer/runtime/tasks/archived/

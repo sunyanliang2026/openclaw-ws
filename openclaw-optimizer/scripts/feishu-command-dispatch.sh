@@ -9,6 +9,10 @@ START_TASK_SCRIPT="$ROOT_DIR/scripts/start-task.sh"
 EVENT_DIR="$RUNTIME_ROOT/events"
 EVENT_FILE="$EVENT_DIR/feishu-command-events-$(date +%Y%m%d).jsonl"
 CMD_EXAMPLE="/newtask | title: ... | project: internal-openclaw | type: backend-feature | priority: medium | start: true | prompt: ..."
+PROJECT_DIR="$ROOT_DIR/projects"
+TASK_ROOT="$RUNTIME_ROOT/tasks"
+ALLOWED_TYPES=("backend-feature" "frontend-feature" "bug-fix" "docs-changelog")
+ALLOWED_PRIORITIES=("high" "medium" "low")
 
 usage() {
   cat <<USAGE
@@ -72,6 +76,29 @@ emit_error() {
 }
 
 require_bin jq
+
+in_array() {
+  local needle="$1"
+  shift
+  local item
+  for item in "$@"; do
+    if [[ "$item" == "$needle" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+normalize_bool() {
+  local raw="$1"
+  local lowered
+  lowered="$(tr '[:upper:]' '[:lower:]' <<< "$raw")"
+  case "$lowered" in
+    true|1|yes) echo "true" ;;
+    false|0|no) echo "false" ;;
+    *) echo "" ;;
+  esac
+}
 
 msg_text=""
 msg_file=""
@@ -220,6 +247,55 @@ if [[ -z "$prompt" ]]; then
   prompt="Task from Feishu command: $title"
 fi
 
+project_file="$PROJECT_DIR/$project.json"
+if [[ ! -f "$project_file" ]]; then
+  emit_error "invalid_project" "unknown project id" "$project" "Use a valid project id from projects/*.json."
+  exit 1
+fi
+
+if ! in_array "$task_type" "${ALLOWED_TYPES[@]}"; then
+  emit_error "invalid_type" "unsupported task type" "$task_type" "Allowed: backend-feature | frontend-feature | bug-fix | docs-changelog."
+  exit 1
+fi
+
+if ! in_array "$priority" "${ALLOWED_PRIORITIES[@]}"; then
+  emit_error "invalid_priority" "unsupported priority" "$priority" "Allowed: high | medium | low."
+  exit 1
+fi
+
+start_norm="$(normalize_bool "$start_flag")"
+if [[ -z "$start_norm" ]]; then
+  emit_error "invalid_start" "unsupported start flag" "$start_flag" "Allowed: true|false|1|0|yes|no."
+  exit 1
+fi
+start_flag="$start_norm"
+
+for status_dir in active completed failed stopped archived; do
+  existing="$TASK_ROOT/$status_dir/$task_id.json"
+  if [[ -f "$existing" ]]; then
+    emit_error "task_id_conflict" "task id already exists" "$existing" "Provide id: <new-id> or adjust title."
+    exit 1
+  fi
+done
+
+prompt_norm="$(tr '[:upper:]' '[:lower:]' <<< "$prompt" | awk '{gsub(/^[[:space:]]+|[[:space:]]+$/, ""); print}')"
+title_norm="$(tr '[:upper:]' '[:lower:]' <<< "$title" | awk '{gsub(/^[[:space:]]+|[[:space:]]+$/, ""); print}')"
+dup_id=""
+shopt -s nullglob
+for f in "$TASK_ROOT/active/"*.json; do
+  p="$(jq -r '.projectId // empty' "$f")"
+  t="$(jq -r '.title // empty' "$f" | tr '[:upper:]' '[:lower:]' | awk '{gsub(/^[[:space:]]+|[[:space:]]+$/, ""); print}')"
+  pp="$(jq -r '.launch.initialPrompt // empty' "$f" | tr '[:upper:]' '[:lower:]' | awk '{gsub(/^[[:space:]]+|[[:space:]]+$/, ""); print}')"
+  if [[ "$p" == "$project" && "$t" == "$title_norm" && "$pp" == "$prompt_norm" ]]; then
+    dup_id="$(basename "$f" .json)"
+    break
+  fi
+done
+if [[ -n "$dup_id" ]]; then
+  emit_error "duplicate_task" "similar active task already exists" "$dup_id" "Reuse existing task or change title/prompt."
+  exit 1
+fi
+
 if ! create_out="$("$NEW_TASK_SCRIPT" \
   --project "$project" \
   --task-id "$task_id" \
@@ -234,8 +310,8 @@ fi
 start_out=""
 started=false
 tmux_session=""
-start_norm="$(tr '[:upper:]' '[:lower:]' <<< "$start_flag")"
-if [[ "$start_norm" == "true" || "$start_norm" == "1" || "$start_norm" == "yes" ]]; then
+worktree_path="$(jq -r '.worktreeRoot // "/home/ubuntu/workspace/worktrees"' "$project_file")/$task_id"
+if [[ "$start_flag" == "true" ]]; then
   if ! start_out="$("$START_TASK_SCRIPT" "$task_id" 2>&1)"; then
     emit_error "task_start_failed" "start-task.sh failed after task creation" "$start_out" "Task is created. Inspect task json and run start-task manually."
     exit 1
@@ -248,9 +324,9 @@ fi
 
 log_event "feishu_command_task_created" "task_id=$task_id project=$project type=$task_type priority=$priority started=$started"
 
-reply_text="Task created: $task_id (project=$project, started=$started)."
+reply_text="Task created: $task_id (project=$project, started=$started, worktree=$worktree_path)."
 if [[ "$started" == "true" ]] && [[ -n "$tmux_session" ]]; then
-  reply_text="Task created: $task_id (project=$project, started=$started, tmuxSession=$tmux_session)."
+  reply_text="Task created: $task_id (project=$project, started=$started, tmuxSession=$tmux_session, worktree=$worktree_path)."
 fi
 
 jq -cn \
@@ -263,5 +339,6 @@ jq -cn \
   --arg startOutput "$start_out" \
   --arg started "$started" \
   --arg tmuxSession "$tmux_session" \
+  --arg worktreePath "$worktree_path" \
   --arg replyText "$reply_text" \
-  '{ok:true,taskId:$taskId,project:$project,type:$type,priority:$priority,title:$title,started:($started=="true"),tmuxSession:($tmuxSession | if .=="" then null else . end),createOutput:$createOutput,startOutput:$startOutput,replyText:$replyText}'
+  '{ok:true,taskId:$taskId,project:$project,type:$type,priority:$priority,title:$title,started:($started=="true"),tmuxSession:($tmuxSession | if .=="" then null else . end),worktreePath:$worktreePath,createOutput:$createOutput,startOutput:$startOutput,replyText:$replyText}'
