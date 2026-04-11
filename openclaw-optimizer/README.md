@@ -31,6 +31,7 @@ This folder distills practical ideas from `OpenClaw + Claude Code .pdf` into a m
 - `scripts/github-task-overview.sh`: one-command PR/checks/mergeability view for active tasks.
 - `scripts/verify-runtime-boundary.sh`: enforce runtime-vs-repo boundary by validating `.gitignore` and tracked files.
 - `scripts/write-task-summary.sh`: generate/update a normalized task summary artifact in `runtime/summaries/`.
+- `scripts/notify-task-completion.sh`: send completed-task summary back to Feishu (or configured channel target).
 - `scripts/metrics-report.sh`: rolling metrics report from JSONL runtime events.
 - `scripts/alert-check.sh`: threshold-based alert checker using metrics report.
 - `docs/adoption-plan.md`: step-by-step rollout plan for your current OpenClaw.
@@ -82,8 +83,15 @@ Feishu websocket command dispatch (recommended):
 
 ```bash
 # Parse /newtask message text and create/start task
-/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/feishu-command-dispatch.sh --text $'/newtask\ntitle: Build website v1\nproject: internal-openclaw\ntype: frontend-feature\npriority: high\nprompt: Build pages and tests.'
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/feishu-command-dispatch.sh --text $'/newtask\ntitle: Build website v1\nproject: internal-openclaw\ntype: frontend-feature\npriority: high\nnotify: true\nnotify_channel: feishu\nnotify_account: main\nnotify_to: chat:oc_xxx\nprompt: Build pages and tests.'
 ```
+
+`/newtask` supports optional completion callback keys:
+
+- `notify: true|false`
+- `notify_channel: feishu`
+- `notify_account: main`
+- `notify_to: chat:<chatId> | user:<openId>`
 
 Feishu inbound HTTP bridge (fallback only):
 

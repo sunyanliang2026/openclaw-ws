@@ -10,6 +10,8 @@ EVENT_DIR="$ROOT/events"
 LOG_FILE="$LOG_DIR/pr-check-$(date +%Y%m%d).log"
 EVENT_FILE="$EVENT_DIR/pr-check-events-$(date +%Y%m%d).jsonl"
 QUALITY_CONFIG="${QUALITY_CONFIG:-/home/ubuntu/.openclaw/workspace/openclaw-optimizer/config/quality-gates.json}"
+NOTIFY_TASK_COMPLETION_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/notify-task-completion.sh"
+SUMMARY_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/write-task-summary.sh"
 
 mkdir -p "$ACTIVE_DIR" "$COMPLETED_DIR" "$FAILED_DIR" "$LOG_DIR" "$EVENT_DIR"
 
@@ -200,8 +202,14 @@ for task_file in "$ACTIVE_DIR"/*.json; do
     jq --arg now "$(date -Is)" '.status = "completed" | .completedAt = $now | .updatedAt = $now' "$task_file" > "$tmp"
     mv "$tmp" "$COMPLETED_DIR/$task_id.json"
     rm -f "$task_file"
+    if [[ -x "$SUMMARY_SCRIPT" ]]; then
+      "$SUMMARY_SCRIPT" --task-file "$COMPLETED_DIR/$task_id.json" --stage updated "$ROOT" >/dev/null 2>&1 || true
+    fi
     log "task=$task_id moved to completed"
     log_event "task_completed" "$task_id" "completed" "reason=pr_merged"
+    if [[ -x "$NOTIFY_TASK_COMPLETION_SCRIPT" ]]; then
+      "$NOTIFY_TASK_COMPLETION_SCRIPT" --task-file "$COMPLETED_DIR/$task_id.json" "$ROOT" >> "$LOG_FILE" 2>&1 || true
+    fi
     continue
   fi
 

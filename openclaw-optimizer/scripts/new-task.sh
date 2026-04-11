@@ -10,7 +10,7 @@ TASK_DIR="$RUNTIME_ROOT/tasks/active"
 usage() {
   cat <<USAGE
 Usage:
-  $0 --project <project_id> --task-id <task_id> --title <text> [--type backend-feature] [--priority high|medium|low] [--branch feat/xxx] [--agent codex] [--prompt "..."] [--requirement file.md]
+  $0 --project <project_id> --task-id <task_id> --title <text> [--type backend-feature] [--priority high|medium|low] [--branch feat/xxx] [--agent codex] [--prompt "..."] [--requirement file.md] [--notify-channel feishu] [--notify-account main] [--notify-target chat:oc_xxx]
 USAGE
 }
 
@@ -37,6 +37,9 @@ branch=""
 agent=""
 prompt_text=""
 requirement_file=""
+notify_channel=""
+notify_account=""
+notify_target=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -74,6 +77,18 @@ while [[ $# -gt 0 ]]; do
       ;;
     --requirement)
       requirement_file="${2:-}"
+      shift 2
+      ;;
+    --notify-channel)
+      notify_channel="${2:-}"
+      shift 2
+      ;;
+    --notify-account)
+      notify_account="${2:-}"
+      shift 2
+      ;;
+    --notify-target)
+      notify_target="${2:-}"
       shift 2
       ;;
     -h|--help)
@@ -145,6 +160,16 @@ fi
 
 worktree_path="$worktree_root/$task_id"
 now_iso="$(date -Is)"
+if [[ -z "$notify_channel" ]]; then
+  notify_channel="feishu"
+fi
+if [[ -z "$notify_account" ]]; then
+  notify_account="main"
+fi
+notify_enabled="false"
+if [[ -n "$notify_target" ]]; then
+  notify_enabled="true"
+fi
 
 jq -cn \
   --arg id "$task_id" \
@@ -158,6 +183,10 @@ jq -cn \
   --arg now "$now_iso" \
   --arg prompt "$prompt_text" \
   --arg title "$title" \
+  --arg notifyChannel "$notify_channel" \
+  --arg notifyAccount "$notify_account" \
+  --arg notifyTarget "$notify_target" \
+  --argjson notifyEnabled "$notify_enabled" \
   --arg verifyCmd "$verification_command" \
   --argjson requirePr "$require_pr" \
   --argjson smokeNoBranch "$smoke_task_no_branch" \
@@ -196,6 +225,14 @@ jq -cn \
       testCommand:$verifyCmd,
       testsPassed:false,
       evidence:""
+    },
+    notify:{
+      enabled:$notifyEnabled,
+      channel:$notifyChannel,
+      account:$notifyAccount,
+      target:(if ($notifyTarget|length) > 0 then $notifyTarget else null end),
+      sentAt:null,
+      lastError:null
     },
     policy:{
       requirePr:$requirePr,

@@ -16,6 +16,7 @@ required_patterns=(
   "openclaw-optimizer/runtime/tasks/stopped/"
   "openclaw-optimizer/runtime/tasks/archived/"
   "openclaw-optimizer/runtime/summaries/"
+  "openclaw-optimizer/runtime/state/task-notify/"
 )
 
 missing=0

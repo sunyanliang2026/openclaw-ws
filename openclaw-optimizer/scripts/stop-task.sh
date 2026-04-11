@@ -31,6 +31,7 @@ done
 TASK_ID="${1:-}"
 ROOT="${2:-/home/ubuntu/.openclaw/workspace/openclaw-optimizer/runtime}"
 SUMMARY_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/write-task-summary.sh"
+NOTIFY_TASK_COMPLETION_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/notify-task-completion.sh"
 
 if [[ -z "$TASK_ID" ]]; then
   usage
@@ -81,6 +82,10 @@ rm -f "$ACTIVE_FILE"
 
 if [[ -x "$SUMMARY_SCRIPT" ]]; then
   "$SUMMARY_SCRIPT" --task-file "$dst_dir/$TASK_ID.json" --stage stopped "$ROOT" >/dev/null 2>&1 || true
+fi
+
+if [[ "$RESULT" == "completed" && -x "$NOTIFY_TASK_COMPLETION_SCRIPT" ]]; then
+  "$NOTIFY_TASK_COMPLETION_SCRIPT" --task-file "$dst_dir/$TASK_ID.json" "$ROOT" >/dev/null 2>&1 || true
 fi
 
 echo "stopped task=$TASK_ID result=$RESULT"

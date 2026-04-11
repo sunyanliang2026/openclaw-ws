@@ -59,6 +59,8 @@ fi
 START_TASK_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/start-task.sh"
 ADJUST_PROMPT_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/adjust-prompt.sh"
 ARCHIVE_TASK_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/archive-task.sh"
+NOTIFY_TASK_COMPLETION_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/notify-task-completion.sh"
+SUMMARY_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/write-task-summary.sh"
 
 trim_text() {
   awk '{gsub(/^[[:space:]]+|[[:space:]]+$/, ""); print}' <<< "$1"
@@ -333,8 +335,14 @@ for task_file in "$ACTIVE_DIR"/*.json; do
           "$task_file" > "$tmp"
         mv "$tmp" "$COMPLETED_DIR/$task_id.json"
         rm -f "$task_file"
+        if [[ -x "$SUMMARY_SCRIPT" ]]; then
+          "$SUMMARY_SCRIPT" --task-file "$COMPLETED_DIR/$task_id.json" --stage updated "$ROOT" >/dev/null 2>&1 || true
+        fi
         log "auto-completed legacy ready_for_review smoke/e2e task: $task_id"
         log_event "task_completed" "$task_id" "completed" "reason=legacy_ready_for_review_smoke_autoclose"
+        if [[ -x "$NOTIFY_TASK_COMPLETION_SCRIPT" ]]; then
+          "$NOTIFY_TASK_COMPLETION_SCRIPT" --task-file "$COMPLETED_DIR/$task_id.json" "$ROOT" >> "$LOG_FILE" 2>&1 || true
+        fi
         continue
       fi
       tmp="$(mktemp)"
@@ -411,8 +419,14 @@ for task_file in "$ACTIVE_DIR"/*.json; do
             "$task_file" > "$tmp"
           mv "$tmp" "$COMPLETED_DIR/$task_id.json"
           rm -f "$task_file"
+          if [[ -x "$SUMMARY_SCRIPT" ]]; then
+            "$SUMMARY_SCRIPT" --task-file "$COMPLETED_DIR/$task_id.json" --stage updated "$ROOT" >/dev/null 2>&1 || true
+          fi
           log "task process exited 0; auto-completed smoke/e2e task: $task_id"
           log_event "task_completed" "$task_id" "completed" "reason=process_exit_0_smoke_autoclose"
+          if [[ -x "$NOTIFY_TASK_COMPLETION_SCRIPT" ]]; then
+            "$NOTIFY_TASK_COMPLETION_SCRIPT" --task-file "$COMPLETED_DIR/$task_id.json" "$ROOT" >> "$LOG_FILE" 2>&1 || true
+          fi
         else
           jq \
             --arg now "$(date -Is)" \

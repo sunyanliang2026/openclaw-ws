@@ -29,6 +29,10 @@ Command format:
   type: frontend-feature
   priority: high
   id: optional-task-id
+  notify: true
+  notify_channel: feishu
+  notify_account: main
+  notify_to: chat:oc_xxx
   start: true
   prompt: Implement a responsive marketing site...
 USAGE
@@ -157,6 +161,10 @@ default_project="internal-openclaw"
 default_type="backend-feature"
 default_priority="medium"
 default_start="true"
+default_notify_channel="feishu"
+default_notify_account="main"
+default_notify_target=""
+default_notify_enabled="false"
 
 if [[ -f "$INBOUND_CONFIG" ]]; then
   if ! default_project="$(jq -r '.defaultProjectId // "internal-openclaw"' "$INBOUND_CONFIG" 2>/dev/null)"; then
@@ -175,6 +183,22 @@ if [[ -f "$INBOUND_CONFIG" ]]; then
     emit_error "config_parse_error" "failed to parse inbound config" "$INBOUND_CONFIG"
     exit 1
   fi
+  if ! default_notify_channel="$(jq -r '.completionNotify.channel // "feishu"' "$INBOUND_CONFIG" 2>/dev/null)"; then
+    emit_error "config_parse_error" "failed to parse inbound config" "$INBOUND_CONFIG"
+    exit 1
+  fi
+  if ! default_notify_account="$(jq -r '.completionNotify.account // "main"' "$INBOUND_CONFIG" 2>/dev/null)"; then
+    emit_error "config_parse_error" "failed to parse inbound config" "$INBOUND_CONFIG"
+    exit 1
+  fi
+  if ! default_notify_target="$(jq -r '.completionNotify.target // ""' "$INBOUND_CONFIG" 2>/dev/null)"; then
+    emit_error "config_parse_error" "failed to parse inbound config" "$INBOUND_CONFIG"
+    exit 1
+  fi
+  if ! default_notify_enabled="$(jq -r '.completionNotify.enabled // false' "$INBOUND_CONFIG" 2>/dev/null)"; then
+    emit_error "config_parse_error" "failed to parse inbound config" "$INBOUND_CONFIG"
+    exit 1
+  fi
 fi
 
 project="$default_project"
@@ -184,6 +208,11 @@ task_id=""
 title=""
 prompt=""
 start_flag="$default_start"
+notify_channel="$default_notify_channel"
+notify_account="$default_notify_account"
+notify_target="$default_notify_target"
+notify_enabled="$default_notify_enabled"
+notify_set_by_input=0
 
 if [[ -n "$start_override" ]]; then
   start_flag="$start_override"
@@ -214,6 +243,13 @@ while IFS= read -r line; do
       id|task_id) task_id="$val" ;;
       title) title="$val" ;;
       start) start_flag="$val" ;;
+      notify_channel|channel) notify_channel="$val" ;;
+      notify_account|account) notify_account="$val" ;;
+      notify_to|notify_target|to|target) notify_target="$val" ;;
+      notify|notify_enabled)
+        notify_enabled="$val"
+        notify_set_by_input=1
+        ;;
       prompt)
         if [[ -z "$prompt" ]]; then
           prompt="$val"
@@ -244,6 +280,14 @@ priority="$(trim_text "$priority")"
 task_id="$(trim_text "$task_id")"
 title="$(trim_text "$title")"
 start_flag="$(trim_text "$start_flag")"
+notify_channel="$(trim_text "$notify_channel")"
+notify_account="$(trim_text "$notify_account")"
+notify_target="$(trim_text "$notify_target")"
+notify_enabled="$(trim_text "$notify_enabled")"
+
+if [[ -n "$notify_target" && "$notify_set_by_input" -eq 0 && "$notify_target" != "$default_notify_target" ]]; then
+  notify_enabled="true"
+fi
 
 if [[ -z "$title" ]]; then
   title="$(printf '%s\n' "$prompt" | sed -n '/./{p;q;}')"
@@ -283,6 +327,18 @@ if [[ -z "$start_norm" ]]; then
 fi
 start_flag="$start_norm"
 
+notify_norm="$(normalize_bool "$notify_enabled")"
+if [[ -z "$notify_norm" ]]; then
+  emit_error "invalid_notify" "unsupported notify flag" "$notify_enabled" "Allowed: true|false|1|0|yes|no."
+  exit 1
+fi
+notify_enabled="$notify_norm"
+
+if [[ "$notify_enabled" == "true" && -z "$notify_target" ]]; then
+  emit_error "invalid_notify_target" "notify is enabled but target is empty" "$notify_target" "Set notify_to: chat:<chatId> (or set notify: false)."
+  exit 1
+fi
+
 for status_dir in active completed failed stopped archived; do
   existing="$TASK_ROOT/$status_dir/$task_id.json"
   if [[ -f "$existing" ]]; then
@@ -309,13 +365,20 @@ if [[ -n "$dup_id" ]]; then
   exit 1
 fi
 
-if ! create_out="$("$NEW_TASK_SCRIPT" \
-  --project "$project" \
-  --task-id "$task_id" \
-  --title "$title" \
-  --type "$task_type" \
-  --priority "$priority" \
-  --prompt "$prompt" 2>&1)"; then
+new_task_args=(
+  "$NEW_TASK_SCRIPT"
+  --project "$project"
+  --task-id "$task_id"
+  --title "$title"
+  --type "$task_type"
+  --priority "$priority"
+  --prompt "$prompt"
+)
+if [[ "$notify_enabled" == "true" ]]; then
+  new_task_args+=(--notify-channel "$notify_channel" --notify-account "$notify_account" --notify-target "$notify_target")
+fi
+
+if ! create_out="$("${new_task_args[@]}" 2>&1)"; then
   emit_error "task_create_failed" "new-task.sh failed" "$create_out" "Check project/type/priority values and rerun."
   exit 1
 fi
@@ -341,6 +404,9 @@ reply_text="Task created: $task_id (project=$project, started=$started, worktree
 if [[ "$started" == "true" ]] && [[ -n "$tmux_session" ]]; then
   reply_text="Task created: $task_id (project=$project, started=$started, tmuxSession=$tmux_session, worktree=$worktree_path)."
 fi
+if [[ "$notify_enabled" == "true" ]]; then
+  reply_text="${reply_text%.}; notify=${notify_channel}:${notify_target}."
+fi
 
 jq -cn \
   --arg taskId "$task_id" \
@@ -351,7 +417,11 @@ jq -cn \
   --arg createOutput "$create_out" \
   --arg startOutput "$start_out" \
   --arg started "$started" \
+  --arg notifyEnabled "$notify_enabled" \
+  --arg notifyChannel "$notify_channel" \
+  --arg notifyAccount "$notify_account" \
+  --arg notifyTarget "$notify_target" \
   --arg tmuxSession "$tmux_session" \
   --arg worktreePath "$worktree_path" \
   --arg replyText "$reply_text" \
-  '{ok:true,taskId:$taskId,project:$project,type:$type,priority:$priority,title:$title,started:($started=="true"),tmuxSession:($tmuxSession | if .=="" then null else . end),worktreePath:$worktreePath,createOutput:$createOutput,startOutput:$startOutput,replyText:$replyText}'
+  '{ok:true,taskId:$taskId,project:$project,type:$type,priority:$priority,title:$title,started:($started=="true"),notify:{enabled:($notifyEnabled=="true"),channel:$notifyChannel,account:$notifyAccount,target:(if ($notifyTarget|length)>0 then $notifyTarget else null end)},tmuxSession:($tmuxSession | if .=="" then null else . end),worktreePath:$worktreePath,createOutput:$createOutput,startOutput:$startOutput,replyText:$replyText}'

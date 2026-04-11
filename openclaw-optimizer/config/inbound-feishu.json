@@ -8,6 +8,12 @@
   "autoStart": true,
   "defaultType": "backend-feature",
   "defaultPriority": "medium",
+  "completionNotify": {
+    "enabled": false,
+    "channel": "feishu",
+    "account": "main",
+    "target": ""
+  },
   "allowedChatIds": [],
   "taskIdPrefix": "req",
   "maxTitleLength": 80,
