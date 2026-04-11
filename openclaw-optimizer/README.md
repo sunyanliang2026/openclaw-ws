@@ -23,6 +23,7 @@ This folder distills practical ideas from `OpenClaw + Claude Code .pdf` into a m
 - `scripts/feishu-inbound.sh`: start/stop/status wrapper for Feishu inbound server.
 - `scripts/adjust-prompt.sh`: retry-time prompt adjustment based on failure reason.
 - `scripts/cleanup-worktrees.sh`: hourly orphan worktree cleanup with tmux safety checks.
+- `scripts/cleanup-archives.sh`: retention-based cleanup for archived tasks and stale run artifacts.
 - `scripts/healthcheck.sh`: single-command machine/operator health check (auth, gateway, Feishu, ports, memory/swap, git).
 - `scripts/session-check.sh`: verify task/session consistency and optionally fix stale tmux bindings.
 - `scripts/write-task-summary.sh`: generate/update a normalized task summary artifact in `runtime/summaries/`.
@@ -191,6 +192,13 @@ Worktree cleanup:
 ```bash
 DRY_RUN=1 /home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/cleanup-worktrees.sh
 /home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/cleanup-worktrees.sh
+```
+
+Archive cleanup (keep last 14 days by default):
+
+```bash
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/cleanup-archives.sh --dry-run
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/cleanup-archives.sh --days 14
 ```
 
 Run a one-shot operator health check:

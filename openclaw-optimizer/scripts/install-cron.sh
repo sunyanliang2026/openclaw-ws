@@ -4,11 +4,13 @@ set -euo pipefail
 SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/reconcile-tasks.sh"
 PR_CHECK_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/pr-check.sh"
 CLEANUP_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/cleanup-worktrees.sh"
+ARCHIVE_CLEANUP_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/cleanup-archives.sh"
 ALERT_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/alert-check.sh"
 RUNTIME_ROOT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/runtime"
 ENTRY="*/10 * * * * $SCRIPT $RUNTIME_ROOT >> $RUNTIME_ROOT/logs/reconcile-cron.log 2>&1"
 PR_ENTRY="5-59/10 * * * * $PR_CHECK_SCRIPT $RUNTIME_ROOT >> $RUNTIME_ROOT/logs/pr-check-cron.log 2>&1"
 CLEANUP_ENTRY="17 * * * * $CLEANUP_SCRIPT $RUNTIME_ROOT >> $RUNTIME_ROOT/logs/cleanup-cron.log 2>&1"
+ARCHIVE_CLEANUP_ENTRY="37 3 * * * $ARCHIVE_CLEANUP_SCRIPT --days 14 $RUNTIME_ROOT >> $RUNTIME_ROOT/logs/archive-cleanup-cron.log 2>&1"
 ALERT_ENTRY="27 * * * * $ALERT_SCRIPT $RUNTIME_ROOT >> $RUNTIME_ROOT/logs/alert-cron.log 2>&1"
 
 TMP="$(mktemp)"
@@ -30,6 +32,10 @@ fi
 
 if ! grep -Fqx "$CLEANUP_ENTRY" "$TMP"; then
   printf '%s\n' "$CLEANUP_ENTRY" >>"$TMP"
+fi
+
+if ! grep -Fqx "$ARCHIVE_CLEANUP_ENTRY" "$TMP"; then
+  printf '%s\n' "$ARCHIVE_CLEANUP_ENTRY" >>"$TMP"
 fi
 
 if ! grep -Fqx "$ALERT_ENTRY" "$TMP"; then
