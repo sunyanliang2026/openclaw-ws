@@ -24,6 +24,7 @@ This folder distills practical ideas from `OpenClaw + Claude Code .pdf` into a m
 - `scripts/adjust-prompt.sh`: retry-time prompt adjustment based on failure reason.
 - `scripts/cleanup-worktrees.sh`: hourly orphan worktree cleanup with tmux safety checks.
 - `scripts/healthcheck.sh`: single-command machine/operator health check (auth, gateway, Feishu, ports, memory/swap, git).
+- `scripts/session-check.sh`: verify task/session consistency and optionally fix stale tmux bindings.
 - `scripts/metrics-report.sh`: rolling metrics report from JSONL runtime events.
 - `scripts/alert-check.sh`: threshold-based alert checker using metrics report.
 - `docs/adoption-plan.md`: step-by-step rollout plan for your current OpenClaw.
@@ -187,6 +188,13 @@ Run a one-shot operator health check:
 
 ```bash
 /home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/healthcheck.sh
+```
+
+Check tmux/task session consistency:
+
+```bash
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/session-check.sh
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/session-check.sh --fix
 ```
 
 Structured logs:
