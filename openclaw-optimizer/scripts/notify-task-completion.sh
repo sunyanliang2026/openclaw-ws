@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Cron often runs with a minimal PATH; include common user bin locations.
+export PATH="/home/ubuntu/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${PATH:-}"
+
 usage() {
   echo "Usage: $0 --task-file <path> [--event <text>] [--dry-run] [runtime_root]"
 }
@@ -56,7 +59,14 @@ require_bin() {
 }
 
 require_bin jq
-require_bin openclaw
+OPENCLAW_BIN="${OPENCLAW_BIN:-$(command -v openclaw || true)}"
+if [[ -z "$OPENCLAW_BIN" && -x "/home/ubuntu/.local/bin/openclaw" ]]; then
+  OPENCLAW_BIN="/home/ubuntu/.local/bin/openclaw"
+fi
+if [[ -z "$OPENCLAW_BIN" ]]; then
+  echo "missing binary: openclaw"
+  exit 1
+fi
 
 mkdir -p "$STATE_DIR" "$LOG_DIR"
 
@@ -166,7 +176,7 @@ if [[ "$DRY_RUN" -eq 1 ]]; then
   printf '%s\n' "DRYRUN text channel=$notify_channel account=$notify_account target=$notify_target status=$status"
   printf '%s\n' "$msg"
 else
-  send_args=(openclaw message send --channel "$notify_channel" --target "$notify_target" --message "$msg" --json)
+  send_args=("$OPENCLAW_BIN" message send --channel "$notify_channel" --target "$notify_target" --message "$msg" --json)
   if [[ -n "$notify_account" ]]; then
     send_args+=(--account "$notify_account")
   fi
@@ -204,7 +214,7 @@ file: $(basename "$artifact_file")"
     printf '%s\n' "DRYRUN media channel=$notify_channel account=$notify_account target=$notify_target status=$status media=$artifact_file"
     printf '%s\n' "$artifact_msg"
   else
-    media_args=(openclaw message send --channel "$notify_channel" --target "$notify_target" --message "$artifact_msg" --media "$artifact_file" --json)
+    media_args=("$OPENCLAW_BIN" message send --channel "$notify_channel" --target "$notify_target" --message "$artifact_msg" --media "$artifact_file" --json)
     if [[ -n "$notify_account" ]]; then
       media_args+=(--account "$notify_account")
     fi
