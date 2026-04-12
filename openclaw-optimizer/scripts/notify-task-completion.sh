@@ -38,6 +38,7 @@ done
 
 ROOT="${1:-/home/ubuntu/.openclaw/workspace/openclaw-optimizer/runtime}"
 INBOUND_CONFIG="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/config/inbound-feishu.json"
+SUMMARY_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/write-task-summary.sh"
 STATE_DIR="$ROOT/state/task-notify"
 LOG_DIR="$ROOT/logs"
 LOG_FILE="$LOG_DIR/task-notify-$(date +%Y%m%d).log"
@@ -161,36 +162,87 @@ fi
 msg="$msg
 summary: $summary_file"
 
-send_args=(openclaw message send --channel "$notify_channel" --target "$notify_target" --message "$msg" --json)
-if [[ -n "$notify_account" ]]; then
-  send_args+=(--account "$notify_account")
-fi
-
 if [[ "$DRY_RUN" -eq 1 ]]; then
-  printf '%s\n' "DRYRUN channel=$notify_channel account=$notify_account target=$notify_target status=$status"
+  printf '%s\n' "DRYRUN text channel=$notify_channel account=$notify_account target=$notify_target status=$status"
   printf '%s\n' "$msg"
-  exit 0
+else
+  send_args=(openclaw message send --channel "$notify_channel" --target "$notify_target" --message "$msg" --json)
+  if [[ -n "$notify_account" ]]; then
+    send_args+=(--account "$notify_account")
+  fi
+  if ! send_out="$("${send_args[@]}" 2>&1)"; then
+    now="$(date -Is)"
+    tmp="$(mktemp)"
+    jq --arg now "$now" --arg err "$send_out" '.notify.lastError = $err | .updatedAt = $now' "$TASK_FILE" > "$tmp" && mv "$tmp" "$TASK_FILE"
+    echo "[$now] notify failed task=$task_id status=$status channel=$notify_channel target=$notify_target err=$send_out" >> "$LOG_FILE"
+    exit 2
+  fi
 fi
 
-if send_out="$("${send_args[@]}" 2>&1)"; then
-  now="$(date -Is)"
-  tmp_task="$(mktemp)"
-  jq --arg now "$now" --arg st "$status" '.notify.sentAt = $now | .notify.lastStatus = $st | .notify.lastError = null' "$TASK_FILE" > "$tmp_task" && mv "$tmp_task" "$TASK_FILE"
+artifact_file=""
+artifact_send_error=""
+case "$status" in
+  ready_for_review|needs_update|completed|failed|archived)
+    if [[ ! -f "$summary_file" && -x "$SUMMARY_SCRIPT" ]]; then
+      "$SUMMARY_SCRIPT" --task-file "$TASK_FILE" --stage updated "$ROOT" >/dev/null 2>&1 || true
+    fi
+    if [[ -f "$summary_file" ]]; then
+      artifact_file="$summary_file"
+    else
+      artifact_file="$TASK_FILE"
+    fi
+    ;;
+esac
 
-  tmp_state="$(mktemp)"
-  if [[ -f "$state_file" ]]; then
-    jq --arg s "$status" --arg fp "$fingerprint" --arg now "$now" '.sent = (.sent // {}) | .sent[$s] = {fingerprint:$fp, sentAt:$now}' "$state_file" > "$tmp_state"
+if [[ -n "$artifact_file" ]]; then
+  artifact_msg="[openclaw task artifact]
+id: $task_id
+status: $status
+file: $(basename "$artifact_file")"
+
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    printf '%s\n' "DRYRUN media channel=$notify_channel account=$notify_account target=$notify_target status=$status media=$artifact_file"
+    printf '%s\n' "$artifact_msg"
   else
-    jq -cn --arg s "$status" --arg fp "$fingerprint" --arg now "$now" '{sent:{($s):{fingerprint:$fp,sentAt:$now}}}' > "$tmp_state"
+    media_args=(openclaw message send --channel "$notify_channel" --target "$notify_target" --message "$artifact_msg" --media "$artifact_file" --json)
+    if [[ -n "$notify_account" ]]; then
+      media_args+=(--account "$notify_account")
+    fi
+    if ! media_out="$("${media_args[@]}" 2>&1)"; then
+      artifact_send_error="$media_out"
+    fi
   fi
-  mv "$tmp_state" "$state_file"
-
-  echo "[$now] notify sent task=$task_id status=$status channel=$notify_channel target=$notify_target" >> "$LOG_FILE"
-  exit 0
 fi
 
 now="$(date -Is)"
-tmp="$(mktemp)"
-jq --arg now "$now" --arg err "$send_out" '.notify.lastError = $err | .updatedAt = $now' "$TASK_FILE" > "$tmp" && mv "$tmp" "$TASK_FILE"
-echo "[$now] notify failed task=$task_id status=$status channel=$notify_channel target=$notify_target err=$send_out" >> "$LOG_FILE"
-exit 2
+tmp_task="$(mktemp)"
+jq \
+  --arg now "$now" \
+  --arg st "$status" \
+  --arg artifactFile "$artifact_file" \
+  --arg artifactErr "$artifact_send_error" \
+  '
+  .notify.sentAt = $now
+  | .notify.lastStatus = $st
+  | .notify.lastError = null
+  | .notify.artifactFile = (if ($artifactFile|length) > 0 then $artifactFile else null end)
+  | .notify.artifactSentAt = (if ($artifactFile|length) > 0 and ($artifactErr|length) == 0 then $now else (.notify.artifactSentAt // null) end)
+  | .notify.artifactLastError = (if ($artifactErr|length) > 0 then $artifactErr else null end)
+  ' \
+  "$TASK_FILE" > "$tmp_task" && mv "$tmp_task" "$TASK_FILE"
+
+tmp_state="$(mktemp)"
+if [[ -f "$state_file" ]]; then
+  jq --arg s "$status" --arg fp "$fingerprint" --arg now "$now" '.sent = (.sent // {}) | .sent[$s] = {fingerprint:$fp, sentAt:$now}' "$state_file" > "$tmp_state"
+else
+  jq -cn --arg s "$status" --arg fp "$fingerprint" --arg now "$now" '{sent:{($s):{fingerprint:$fp,sentAt:$now}}}' > "$tmp_state"
+fi
+mv "$tmp_state" "$state_file"
+
+if [[ -n "$artifact_send_error" ]]; then
+  echo "[$now] notify sent task=$task_id status=$status channel=$notify_channel target=$notify_target artifact=failed err=$artifact_send_error" >> "$LOG_FILE"
+else
+  echo "[$now] notify sent task=$task_id status=$status channel=$notify_channel target=$notify_target" >> "$LOG_FILE"
+fi
+
+exit 0
