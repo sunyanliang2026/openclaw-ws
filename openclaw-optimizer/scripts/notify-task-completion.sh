@@ -58,6 +58,23 @@ require_bin() {
   }
 }
 
+extract_media_send_error() {
+  local output="$1"
+  if grep -qi 'sendMediaFeishu failed' <<< "$output"; then
+    if grep -qi 'im:resource:upload\|im:resource\|99991672' <<< "$output"; then
+      echo "feishu media upload denied: missing scope im:resource:upload (or im:resource)"
+      return 0
+    fi
+    grep -i 'sendMediaFeishu failed' <<< "$output" | head -n 1 | sed 's/[[:space:]]\+/ /g'
+    return 0
+  fi
+  if grep -qi 'Request failed with status code' <<< "$output"; then
+    grep -i 'Request failed with status code' <<< "$output" | head -n 1 | sed 's/[[:space:]]\+/ /g'
+    return 0
+  fi
+  return 1
+}
+
 require_bin jq
 OPENCLAW_BIN="${OPENCLAW_BIN:-$(command -v openclaw || true)}"
 if [[ -z "$OPENCLAW_BIN" && -x "/home/ubuntu/.local/bin/openclaw" ]]; then
@@ -220,6 +237,8 @@ file: $(basename "$artifact_file")"
     fi
     if ! media_out="$("${media_args[@]}" 2>&1)"; then
       artifact_send_error="$media_out"
+    elif media_detected_error="$(extract_media_send_error "$media_out" || true)"; [[ -n "$media_detected_error" ]]; then
+      artifact_send_error="$media_detected_error"
     fi
   fi
 fi
