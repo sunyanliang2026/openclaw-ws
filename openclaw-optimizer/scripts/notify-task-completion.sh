@@ -75,6 +75,104 @@ extract_media_send_error() {
   return 1
 }
 
+is_allowed_artifact_file() {
+  local f="$1"
+  [[ -f "$f" ]] || return 1
+  case "${f,,}" in
+    *.md|*.txt|*.pdf|*.doc|*.docx|*.csv|*.tsv|*.json|*.xlsx|*.xls|*.ppt|*.pptx|*.png|*.jpg|*.jpeg|*.gif|*.zip|*.tar|*.tgz|*.tar.gz)
+      return 0
+      ;;
+  esac
+  return 1
+}
+
+pick_business_artifact() {
+  local task_file="$1"
+  local run_log_file="$2"
+  local worktree_path="$3"
+  local started_at="$4"
+  local created_at="$5"
+  local candidate=""
+
+  # 1) Explicit artifact-style fields if present.
+  while IFS= read -r candidate; do
+    candidate="$(awk '{gsub(/^[[:space:]]+|[[:space:]]+$/, ""); print}' <<< "$candidate")"
+    [[ -z "$candidate" ]] && continue
+    candidate="${candidate%\"}"
+    candidate="${candidate#\"}"
+    if [[ "$candidate" != /* ]]; then
+      candidate="$worktree_path/$candidate"
+    fi
+    if is_allowed_artifact_file "$candidate"; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done < <(jq -r '
+    [
+      .deliverable,
+      .deliverableFile,
+      .resultFile,
+      .resultPath,
+      .verification.outputFile,
+      .verification.outputPath,
+      .verification.artifact,
+      .verification.artifactFile
+    ] + (.deliverables // [])
+      + (.artifacts // [])
+      + (.artifacts.files // [])
+      + (.verification.artifacts // [])
+    | .[]
+    | strings
+  ' "$task_file" 2>/dev/null || true)
+
+  # 2) Parse absolute/relative file hints from run.log.
+  if [[ -f "$run_log_file" ]]; then
+    while IFS= read -r candidate; do
+      candidate="$(awk '{gsub(/^[[:space:]]+|[[:space:]]+$/, ""); print}' <<< "$candidate")"
+      [[ -z "$candidate" ]] && continue
+      if [[ "$candidate" != /* ]]; then
+        candidate="$worktree_path/$candidate"
+      fi
+      if is_allowed_artifact_file "$candidate"; then
+        printf '%s\n' "$candidate"
+        return 0
+      fi
+    done < <(
+      {
+        # Markdown links with absolute paths.
+        rg -o '\]\((/[^)]*\.(md|txt|pdf|docx?|csv|tsv|json|xlsx?|pptx?|png|jpe?g|gif|zip|tar|tgz|tar\.gz))\)' "$run_log_file" -r '$1' -N -S || true
+        # Any absolute path-like file mention.
+        rg -o '/[^[:space:])"]+\.(md|txt|pdf|docx?|csv|tsv|json|xlsx?|pptx?|png|jpe?g|gif|zip|tar|tgz|tar\.gz)' "$run_log_file" -N -S || true
+        # Common creation patterns: cat > file
+        rg -o "cat >\\s*([^'\"[:space:]]+\\.(md|txt|pdf|docx?|csv|tsv|json|xlsx?|pptx?))" "$run_log_file" -r '$1' -N -S || true
+      } | awk '!seen[$0]++'
+    )
+  fi
+
+  # 3) Fallback: newest candidate generated in worktree during task run window.
+  if [[ -d "$worktree_path" ]]; then
+    local time_ref=""
+    if [[ -n "$started_at" ]]; then
+      time_ref="$started_at"
+    elif [[ -n "$created_at" ]]; then
+      time_ref="$created_at"
+    fi
+    if [[ -n "$time_ref" ]]; then
+      candidate="$(find "$worktree_path" \
+        -path "$worktree_path/.git" -prune -o \
+        -type f -newermt "$time_ref" \
+        \( -iname '*.md' -o -iname '*.txt' -o -iname '*.pdf' -o -iname '*.doc' -o -iname '*.docx' -o -iname '*.csv' -o -iname '*.tsv' -o -iname '*.json' -o -iname '*.xlsx' -o -iname '*.xls' -o -iname '*.ppt' -o -iname '*.pptx' -o -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.gif' -o -iname '*.zip' -o -iname '*.tar' -o -iname '*.tgz' -o -iname '*.tar.gz' \) \
+        -printf '%T@ %p\n' 2>/dev/null | sort -nr | head -n 1 | cut -d' ' -f2-)"
+      if is_allowed_artifact_file "$candidate"; then
+        printf '%s\n' "$candidate"
+        return 0
+      fi
+    fi
+  fi
+
+  return 1
+}
+
 require_bin jq
 OPENCLAW_BIN="${OPENCLAW_BIN:-$(command -v openclaw || true)}"
 if [[ -z "$OPENCLAW_BIN" && -x "/home/ubuntu/.local/bin/openclaw" ]]; then
@@ -157,6 +255,10 @@ reason="$(jq -r '.lastFailure.reason // ""' "$TASK_FILE")"
 klass="$(jq -r '.lastFailure.classification // ""' "$TASK_FILE")"
 summary_file="$ROOT/summaries/$task_id.json"
 evidence_line="$(jq -r '.verification.evidence // ""' "$TASK_FILE" | awk 'NF{print; exit}')"
+worktree_path="$(jq -r '.worktreePath // empty' "$TASK_FILE")"
+started_at="$(jq -r '.startedAt // empty' "$TASK_FILE")"
+created_at="$(jq -r '.createdAt // empty' "$TASK_FILE")"
+run_log_file="$ROOT/task-runs/$task_id/run.log"
 if [[ -z "$evidence_line" ]]; then
   evidence_line="(no evidence line)"
 fi
@@ -208,15 +310,23 @@ fi
 
 artifact_file=""
 artifact_send_error=""
+artifact_type=""
 case "$status" in
   ready_for_review|needs_update|completed|failed|archived)
-    if [[ ! -f "$summary_file" && -x "$SUMMARY_SCRIPT" ]]; then
-      "$SUMMARY_SCRIPT" --task-file "$TASK_FILE" --stage updated "$ROOT" >/dev/null 2>&1 || true
-    fi
-    if [[ -f "$summary_file" ]]; then
-      artifact_file="$summary_file"
+    if artifact_candidate="$(pick_business_artifact "$TASK_FILE" "$run_log_file" "$worktree_path" "$started_at" "$created_at" 2>/dev/null || true)"; [[ -n "$artifact_candidate" ]]; then
+      artifact_file="$artifact_candidate"
+      artifact_type="business"
     else
-      artifact_file="$TASK_FILE"
+      if [[ ! -f "$summary_file" && -x "$SUMMARY_SCRIPT" ]]; then
+        "$SUMMARY_SCRIPT" --task-file "$TASK_FILE" --stage updated "$ROOT" >/dev/null 2>&1 || true
+      fi
+      if [[ -f "$summary_file" ]]; then
+        artifact_file="$summary_file"
+        artifact_type="summary"
+      else
+        artifact_file="$TASK_FILE"
+        artifact_type="task-meta"
+      fi
     fi
     ;;
 esac
@@ -225,6 +335,7 @@ if [[ -n "$artifact_file" ]]; then
   artifact_msg="[openclaw task artifact]
 id: $task_id
 status: $status
+type: ${artifact_type:-unknown}
 file: $(basename "$artifact_file")"
 
   if [[ "$DRY_RUN" -eq 1 ]]; then
@@ -249,12 +360,14 @@ jq \
   --arg now "$now" \
   --arg st "$status" \
   --arg artifactFile "$artifact_file" \
+  --arg artifactType "$artifact_type" \
   --arg artifactErr "$artifact_send_error" \
   '
   .notify.sentAt = $now
   | .notify.lastStatus = $st
   | .notify.lastError = null
   | .notify.artifactFile = (if ($artifactFile|length) > 0 then $artifactFile else null end)
+  | .notify.artifactType = (if ($artifactType|length) > 0 then $artifactType else null end)
   | .notify.artifactSentAt = (if ($artifactFile|length) > 0 and ($artifactErr|length) == 0 then $now else (.notify.artifactSentAt // null) end)
   | .notify.artifactLastError = (if ($artifactErr|length) > 0 then $artifactErr else null end)
   ' \
