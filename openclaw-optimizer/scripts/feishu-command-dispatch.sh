@@ -45,6 +45,28 @@ require_bin() {
   }
 }
 
+infer_chat_id_from_status() {
+  local openclaw_bin=""
+  openclaw_bin="$(command -v openclaw || true)"
+  if [[ -z "$openclaw_bin" && -x "/home/ubuntu/.local/bin/openclaw" ]]; then
+    openclaw_bin="/home/ubuntu/.local/bin/openclaw"
+  fi
+  [[ -n "$openclaw_bin" ]] || return 1
+
+  local status_json=""
+  status_json="$("$openclaw_bin" status --json 2>/dev/null || true)"
+  [[ -n "$status_json" ]] || return 1
+
+  jq -r '
+    .sessions.recent // []
+    | map(select(.key != null and (.key|type)=="string" and (.key|test(":feishu:group:oc_"))))
+    | sort_by(.updatedAt // 0)
+    | last
+    | .key // empty
+    | capture("(?<id>oc_[A-Za-z0-9]+)").id // empty
+  ' <<< "$status_json" 2>/dev/null || true
+}
+
 slugify() {
   tr '[:upper:]' '[:lower:]' <<< "$1" \
     | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//; s/-+/-/g'
@@ -110,7 +132,7 @@ normalize_bool() {
 msg_text=""
 msg_file=""
 start_override=""
-source_chat_id="${FEISHU_CHAT_ID:-}"
+source_chat_id="${FEISHU_CHAT_ID:-${OPENCLAW_FEISHU_CHAT_ID:-${OPENCLAW_CHAT_ID:-${CHAT_ID:-${CHANNEL_CHAT_ID:-${OPENCLAW_TARGET:-${TARGET:-}}}}}}}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -301,6 +323,11 @@ notify_target="$(trim_text "$notify_target")"
 notify_enabled="$(trim_text "$notify_enabled")"
 source_chat_id="$(trim_text "$source_chat_id")"
 source_chat_id="${source_chat_id#chat:}"
+if [[ -z "$source_chat_id" ]]; then
+  source_chat_id="$(infer_chat_id_from_status)"
+  source_chat_id="$(trim_text "$source_chat_id")"
+  source_chat_id="${source_chat_id#chat:}"
+fi
 
 if [[ -n "$notify_target" && "$notify_target_set_by_input" -eq 1 && "$notify_set_by_input" -eq 0 ]]; then
   notify_enabled="true"
