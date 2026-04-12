@@ -67,6 +67,19 @@ infer_chat_id_from_status() {
   ' <<< "$status_json" 2>/dev/null || true
 }
 
+infer_chat_id_from_recent_tasks() {
+  local task_json
+  task_json="$(find "$TASK_ROOT" -type f -name '*.json' 2>/dev/null \
+    | xargs -r jq -c '
+      select((.notify.target // "")|type=="string")
+      | select((.notify.target // "")|test("^chat:oc_[A-Za-z0-9]+$"))
+      | {updatedAt:(.updatedAt // .createdAt // ""), target:.notify.target}
+    ' 2>/dev/null \
+    | jq -s 'sort_by(.updatedAt) | last // empty' 2>/dev/null || true)"
+  [[ -n "$task_json" && "$task_json" != "null" ]] || return 1
+  jq -r '.target // empty | sub("^chat:";"")' <<< "$task_json" 2>/dev/null || true
+}
+
 slugify() {
   tr '[:upper:]' '[:lower:]' <<< "$1" \
     | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//; s/-+/-/g'
@@ -328,12 +341,17 @@ if [[ -z "$source_chat_id" ]]; then
   source_chat_id="$(trim_text "$source_chat_id")"
   source_chat_id="${source_chat_id#chat:}"
 fi
+if [[ -z "$source_chat_id" ]]; then
+  source_chat_id="$(infer_chat_id_from_recent_tasks)"
+  source_chat_id="$(trim_text "$source_chat_id")"
+  source_chat_id="${source_chat_id#chat:}"
+fi
 
 if [[ -n "$notify_target" && "$notify_target_set_by_input" -eq 1 && "$notify_set_by_input" -eq 0 ]]; then
   notify_enabled="true"
 fi
 
-if [[ "$default_notify_auto_from_chat" == "true" && -n "$source_chat_id" && "$notify_set_by_input" -eq 0 && "$notify_target_set_by_input" -eq 0 ]]; then
+if [[ "$default_notify_auto_from_chat" == "true" && -n "$source_chat_id" && "$notify_target_set_by_input" -eq 0 ]]; then
   notify_enabled="true"
   notify_target="chat:$source_chat_id"
 fi
