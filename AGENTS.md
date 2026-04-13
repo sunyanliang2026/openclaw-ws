@@ -148,6 +148,12 @@ Rules:
 - If MCP `search` or `query` returns a relevant page, open it with `get_page` before making a strong claim from it.
 - Prefer MCP `put_page` or other `gbrain` MCP write tools over ad-hoc shell commands when writing knowledge back.
 
+Official skill alignment:
+
+- Follow the `query` skill from the official gbrain skillpack: decompose the question into keyword, semantic, and structural retrieval; read top hits before synthesis; cite page slugs; explicitly flag gaps instead of hallucinating.
+- For "tell me about X", load the full page. For yes/no mention checks, search snippets may be enough.
+- When results conflict, apply source precedence: user statements > compiled truth > timeline evidence > external sources.
+
 Local CLI shortcut:
 
 `/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/brain-first-agent.sh --message '<question>'`
@@ -199,6 +205,8 @@ Rules:
 - Do not store casual banter or pure acknowledgements.
 - Do not use this for `/newtask`; `/newtask` stays on the dispatch flow above.
 - If the script returns `skipped: ...`, do not force a note unless the user explicitly says to remember it.
+- Follow the official gbrain `ingest` skill intent: capture durable signal, propagate entities, and keep provenance. New facts should carry source context when they are written back to the brain.
+- Original user thinking is high-value signal. Prefer exact phrasing over paraphrase when capturing it.
 
 ### Feishu Wrapper
 
@@ -212,6 +220,15 @@ Use this wrapper when you want one local command to:
 - or run one normal Feishu turn through `openclaw agent`
 - send the reply back to Feishu
 - then run the durable-signal capture step
+
+### Brain Maintenance
+
+Follow the official gbrain `maintain` skill intent during periodic review:
+
+- Check health, stale pages, orphan pages, dead links, and missing cross-references
+- Watch embedding freshness separately from keyword search availability
+- Treat missing backlinks and missing citations as brain quality bugs
+- Never delete pages without confirmation
 
 **🎭 Voice Storytelling:** If you have `sag` (ElevenLabs TTS), use voice for stories, movie summaries, and "storytime" moments! Way more engaging than walls of text. Surprise people with funny voices.
 
