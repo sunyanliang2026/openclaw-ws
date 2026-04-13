@@ -121,10 +121,19 @@ Skills provide your tools. When you need one, check its `SKILL.md`. Keep local n
 
 For informational requests, always check `gbrain` before answering from general memory.
 
+When the OpenClaw MCP bridge exposes `gbrain` tools, use the MCP tools first instead of shelling out:
+
+- `search` for keyword lookup
+- `query` for question-style retrieval
+- `get_page` after a hit when full page context matters
+- `put_page` / `put_raw_data` / link or timeline tools when writing back structured knowledge
+
 Retrieval order:
 
-1. `gbrain ask '<question>' --no-expand`
-2. `gbrain search '<question>'`
+1. MCP `query` or `search`
+2. MCP `get_page` for any hit you plan to rely on
+3. CLI fallback: `gbrain ask '<question>' --no-expand`
+4. CLI fallback: `gbrain search '<question>'`
 3. workspace memory and rules
 4. runtime logs, task state, external search
 
@@ -134,6 +143,10 @@ Rules:
 - If `gbrain` is partial, say what it covers and then fill the gap from other sources.
 - Do not skip `gbrain` for project decisions, task history, prior constraints, or prior conversation conclusions.
 - Do not pretend you checked `gbrain` if you did not.
+- For informational requests, you MUST call MCP `query` or `search` at least once before answering, unless the user is only asking for pure chit-chat or asks you to avoid tools.
+- If MCP `query` or `search` fails, say that it failed and then use CLI fallback or other sources.
+- If MCP `search` or `query` returns a relevant page, open it with `get_page` before making a strong claim from it.
+- Prefer MCP `put_page` or other `gbrain` MCP write tools over ad-hoc shell commands when writing knowledge back.
 
 Local CLI shortcut:
 
