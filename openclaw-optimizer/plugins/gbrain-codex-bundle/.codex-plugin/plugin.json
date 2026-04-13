@@ -1,0 +1,12 @@
+{
+  "name": "gbrain-codex-bundle",
+  "description": "Local Codex bundle wrapper for gbrain MCP + official skills",
+  "version": "0.1.0",
+  "skills": ["skills"],
+  "mcpServers": {
+    "gbrain_bundle": {
+      "command": "/home/ubuntu/.bun/bin/gbrain",
+      "args": ["serve"]
+    }
+  }
+}

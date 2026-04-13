@@ -73,14 +73,39 @@ fi
 
 section "gateway+feishu"
 if command -v openclaw >/dev/null 2>&1; then
-  probe_out="$(openclaw channels status --probe 2>&1 || true)"
+  probe_out="$(openclaw channels status --probe --json 2>&1 || true)"
+  probe_json="$(printf '%s\n' "$probe_out" | sed -n '/^{/,$p')"
   if grep -q "Gateway reachable" <<< "$probe_out"; then
+    ok "gateway" "reachable"
+  elif [[ -n "$probe_json" ]] && jq -e '.channels.feishu.configured == true' <<< "$probe_json" >/dev/null 2>&1; then
     ok "gateway" "reachable"
   else
     fail "gateway" "not reachable"
   fi
 
-  if grep -Eq "Feishu main: .*works" <<< "$probe_out"; then
+  if [[ -n "$probe_json" ]] && jq -e '.channelAccounts.feishu != null' <<< "$probe_json" >/dev/null 2>&1; then
+    main_account_line="$(jq -r '.channelAccounts.feishu[]? | select(.accountId=="main") | [.configured,.running,(.probe.ok // false),(.probe.error // "")] | @tsv' <<< "$probe_json" | head -n1)"
+    if [[ -n "$main_account_line" ]]; then
+      IFS=$'\t' read -r main_configured main_running main_probe_ok main_probe_error <<< "$main_account_line"
+      if [[ "$main_configured" == "true" && "$main_running" == "true" && "$main_probe_ok" == "true" ]]; then
+        ok "feishu-main" "configured and working"
+      elif [[ "$main_configured" == "true" && "$main_running" == "true" && "$main_probe_error" == *"timed out"* ]]; then
+        warn "feishu-main" "running but probe timed out"
+      elif [[ "$main_configured" == "true" && "$main_running" == "true" ]]; then
+        warn "feishu-main" "running but probe not confirmed as works"
+      elif [[ "$main_configured" == "true" ]]; then
+        warn "feishu-main" "configured but not running"
+      else
+        fail "feishu-main" "not healthy"
+      fi
+    elif grep -Eq "Feishu main: .*works" <<< "$probe_out"; then
+      ok "feishu-main" "configured and working"
+    elif grep -Eq "Feishu main: .*running" <<< "$probe_out"; then
+      warn "feishu-main" "running but probe not confirmed as works"
+    else
+      fail "feishu-main" "not healthy"
+    fi
+  elif grep -Eq "Feishu main: .*works" <<< "$probe_out"; then
     ok "feishu-main" "configured and working"
   elif grep -Eq "Feishu main: .*running" <<< "$probe_out"; then
     warn "feishu-main" "running but probe not confirmed as works"

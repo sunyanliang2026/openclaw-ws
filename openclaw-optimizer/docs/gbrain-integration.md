@@ -212,3 +212,29 @@ What it does:
 - Current task sync target: `/home/ubuntu/brain/projects/openclaw-tasks`
 - Current Q&A capture targets: `/home/ubuntu/brain/inbox/feishu` and `/home/ubuntu/brain/inbox/codex-cli`
 - No embedding API keys are configured yet, so search is keyword-first today
+
+## Local Codex bundle path
+
+If ClawHub does not expose `gbrain` skills/plugin, use the local Codex bundle wrapper:
+
+- Bundle root: `/home/ubuntu/.openclaw/workspace/openclaw-optimizer/plugins/gbrain-codex-bundle`
+- Includes: upstream gbrain skills (copied under `skills/`) + bundled MCP server `gbrain_bundle`
+
+Install or refresh:
+
+```bash
+openclaw plugins install /home/ubuntu/.openclaw/workspace/openclaw-optimizer/plugins/gbrain-codex-bundle --force
+openclaw gateway restart
+```
+
+Verify:
+
+```bash
+openclaw plugins inspect gbrain-codex-bundle --json
+openclaw agent --agent main --message "List tool names that start with gbrain_bundle__ only." --json
+```
+
+Notes:
+
+- This path does not replace the existing `mcp.servers.gbrain` entry; it adds bundle-backed MCP tools with the `gbrain_bundle__` prefix.
+- `openclaw plugins` may print a warning about `plugins.allow` being empty when non-bundled plugins are discovered. This is advisory, not a runtime failure.

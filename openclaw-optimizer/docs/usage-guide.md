@@ -278,6 +278,23 @@ cp /home/ubuntu/.openclaw/workspace/openclaw-optimizer/config/task-schema.exampl
 - live OpenClaw gateway 在发送最终回复后，会自动调用 `capture-feishu-turn-to-brain.sh`
 - `/newtask` 仍然走 task dispatch，不走普通问答 capture
 - capture 脚本仍会跳过 heartbeat、纯确认、过短无信号消息
+
+本地 bundle 兜底（当 ClawHub 找不到官方 gbrain skill/plugin）：
+
+- Bundle 路径：`/home/ubuntu/.openclaw/workspace/openclaw-optimizer/plugins/gbrain-codex-bundle`
+- 安装命令：
+
+```bash
+openclaw plugins install /home/ubuntu/.openclaw/workspace/openclaw-optimizer/plugins/gbrain-codex-bundle --force
+openclaw gateway restart
+```
+
+- 验证命令：
+
+```bash
+openclaw plugins inspect gbrain-codex-bundle --json
+openclaw agent --agent main --message "List tool names that start with gbrain_bundle__ only." --json
+```
 - 目标目录：`/home/ubuntu/brain/inbox/feishu/`
 
 如果 `openclaw update` 覆盖了安装目录里的 `monitor-*.js`，重新执行：
