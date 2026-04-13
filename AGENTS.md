@@ -141,6 +141,43 @@ start: true|false
 prompt: ...
 ```
 
+### Feishu Normal Q&A Capture
+
+Normal Feishu conversation turns are now auto-captured by the live OpenClaw gateway after the final reply is delivered. The capture path uses:
+
+`/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/capture-feishu-turn-to-brain.sh`
+
+The durable-signal rule is still:
+
+- a decision
+- a new fact
+- a standing preference or rule
+- a follow-up item worth retrieving later
+
+If you need to backfill or force a manual note, call:
+
+`/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/capture-feishu-turn-to-brain.sh --message '<raw_message>' --reply '<reply_text>' --summary '<1-3 sentence durable summary>' --chat-id '<oc_xxx>'`
+
+Rules:
+
+- Do not store full transcripts.
+- Do not store casual banter or pure acknowledgements.
+- Do not use this for `/newtask`; `/newtask` stays on the dispatch flow above.
+- If the script returns `skipped: ...`, do not force a note unless the user explicitly says to remember it.
+
+### Feishu Wrapper
+
+If you are driving Feishu from local CLI automation, prefer:
+
+`/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/feishu-turn-wrapper.sh`
+
+Use this wrapper when you want one local command to:
+
+- route `/newtask`
+- or run one normal Feishu turn through `openclaw agent`
+- send the reply back to Feishu
+- then run the durable-signal capture step
+
 **🎭 Voice Storytelling:** If you have `sag` (ElevenLabs TTS), use voice for stories, movie summaries, and "storytime" moments! Way more engaging than walls of text. Surprise people with funny voices.
 
 **📝 Platform Formatting:**

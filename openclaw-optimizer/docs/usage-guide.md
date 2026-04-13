@@ -21,12 +21,18 @@
   - `reconcile-tasks.sh`：状态协调、超时治理、重试调度
   - `pr-check.sh`：PR/CI/门禁检查
   - `adjust-prompt.sh`：按失败分类重写重试 prompt
-  - `metrics-report.sh`：窗口指标统计
-  - `alert-check.sh`：阈值告警检查（可通知）
-  - `cleanup-worktrees.sh`：孤儿 worktree 清理
-  - `install-cron.sh`：安装定时任务
-  - `feishu-inbound-server.py`：飞书 HTTP 入站服务（备用）
-  - `feishu-inbound.sh`：HTTP 入站服务启停管理（备用）
+- `metrics-report.sh`：窗口指标统计
+- `alert-check.sh`：阈值告警检查（可通知）
+- `cleanup-worktrees.sh`：孤儿 worktree 清理
+- `sync-task-summary-to-brain.sh`：将任务摘要 JSON 转成 brain markdown 并导入 gbrain
+- `capture-brain-note.sh`：把普通问答/直接 Codex 会话摘要写入 brain
+- `codex-brain-exec.sh`：包装 `codex exec`，自动把最终结论写入 brain
+- `capture-feishu-turn-to-brain.sh`：普通 Feishu 问答的 durable-signal 摘要写入器；现已被 live gateway 自动调用
+- `feishu-turn-wrapper.sh`：本地测试或手工驱动 Feishu turn 的统一入口
+- `apply-feishu-brain-capture-patch.sh`：在 OpenClaw 升级后，重新把普通 Feishu 问答自动入脑补丁打回 live gateway monitor
+- `install-cron.sh`：安装定时任务
+- `feishu-inbound-server.py`：飞书 HTTP 入站服务（备用）
+- `feishu-inbound.sh`：HTTP 入站服务启停管理（备用）
 - `runtime/`
   - `tasks/{active,completed,failed,stopped}`
   - `logs/*.log`
@@ -227,6 +233,98 @@ cp /home/ubuntu/.openclaw/workspace/openclaw-optimizer/config/task-schema.exampl
 
 - 同一告警指纹会按冷却窗口去重，状态存于 `runtime/state/alert-state.json`。
 - 强制触发测试可用：`ALERT_FORCE_TRIGGER=1`。
+
+## 9.5 GBrain 集成
+
+任务摘要自动入脑：
+
+- `write-task-summary.sh` 生成 `runtime/summaries/*.json` 后，会自动调用 `sync-task-summary-to-brain.sh`
+- 目标目录：`/home/ubuntu/brain/projects/openclaw-tasks/`
+- 入脑内容以任务摘要为主，`run.log` 仅保留路径和失败关键信号，不导入全文
+
+手动全量补同步：
+
+```bash
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/sync-task-summary-to-brain.sh --all
+```
+
+普通飞书问答或直接 Codex CLI 会话，使用：
+
+```bash
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/capture-brain-note.sh \
+  --source feishu \
+  --title "示例标题" \
+  --body "只写可复用结论，不写全文聊天记录。"
+```
+
+普通 Feishu 问答自动入脑：
+
+- live OpenClaw gateway 在发送最终回复后，会自动调用 `capture-feishu-turn-to-brain.sh`
+- `/newtask` 仍然走 task dispatch，不走普通问答 capture
+- capture 脚本仍会跳过 heartbeat、纯确认、过短无信号消息
+- 目标目录：`/home/ubuntu/brain/inbox/feishu/`
+
+如果 `openclaw update` 覆盖了安装目录里的 `monitor-*.js`，重新执行：
+
+```bash
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/apply-feishu-brain-capture-patch.sh --apply --restart
+```
+
+手动补记或测试 capture：
+
+```bash
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/capture-feishu-turn-to-brain.sh \
+  --message "原始用户消息" \
+  --reply "你已经发出去的回复" \
+  --summary "1-3句 durable summary" \
+  --chat-id oc_xxx \
+  --project internal-openclaw \
+  --durable-type decision
+```
+
+行为：
+
+- 默认跳过 `/newtask`、heartbeat、纯确认消息、过短无信号的对话
+- 只写摘要，不写全文 transcript
+- 目标目录：`/home/ubuntu/brain/inbox/feishu/`
+
+如果希望从本地 shell 人工驱动一轮 Feishu turn，再现线上同样的回复加 capture 逻辑，使用：
+
+```bash
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/feishu-turn-wrapper.sh \
+  --chat-id oc_xxx \
+  --message "原始用户消息" \
+  --capture-summary "1-3句 durable summary" \
+  --durable-type decision \
+  --json
+```
+
+行为：
+
+- `/newtask` 自动走 dispatch 并回发 receipt
+- 普通问答自动调用 `openclaw agent --json`
+- 自动把回复发回 Feishu
+- 自动调用 `capture-feishu-turn-to-brain.sh`
+
+详细边界与建议见：
+
+- `docs/gbrain-integration.md`
+
+直接 `codex exec` 时，优先使用包装脚本：
+
+```bash
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/codex-brain-exec.sh \
+  --title "会话标题" \
+  --project internal-openclaw \
+  -- \
+  codex exec -C /abs/repo "你的任务描述"
+```
+
+这样会：
+
+- 保留运行日志到 `runtime/codex-cli-runs/`
+- 自动抓取 `codex exec` 最后一条消息
+- 写一条结构化 closeout 到 brain，而不是保存整段 transcript
 
 ## 10. 日常运维命令
 

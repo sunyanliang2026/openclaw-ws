@@ -4,6 +4,7 @@
 openclaw-optimizer/runtime/events/
 openclaw-optimizer/runtime/logs/
 openclaw-optimizer/runtime/locks/
+openclaw-optimizer/runtime/codex-cli-runs/
 openclaw-optimizer/runtime/task-runs/
 openclaw-optimizer/runtime/tasks/active/
 openclaw-optimizer/runtime/tasks/completed/

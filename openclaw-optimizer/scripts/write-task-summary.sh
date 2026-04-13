@@ -29,6 +29,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 ROOT="${1:-/home/ubuntu/.openclaw/workspace/openclaw-optimizer/runtime}"
+BRAIN_SYNC_SCRIPT="/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/sync-task-summary-to-brain.sh"
 
 if [[ -z "$TASK_FILE" ]]; then
   usage
@@ -94,3 +95,7 @@ jq \
 
 mv "$tmp" "$summary_dir/$task_id.json"
 echo "wrote summary: $summary_dir/$task_id.json"
+
+if [[ "${BRAIN_SYNC_DISABLED:-0}" != "1" && -x "$BRAIN_SYNC_SCRIPT" ]]; then
+  "$BRAIN_SYNC_SCRIPT" --summary-file "$summary_dir/$task_id.json" "$ROOT" >/dev/null 2>&1 || true
+fi

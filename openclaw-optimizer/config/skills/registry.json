@@ -22,6 +22,11 @@
       "appliesTo": ["all"]
     },
     {
+      "id": "feishu-brain-capture",
+      "description": "capture durable signal from normal Feishu Q&A turns into gbrain after replying",
+      "appliesTo": ["all"]
+    },
+    {
       "id": "healthcheck-workflow",
       "description": "single-command operator triage for auth/gateway/channels/ports/resource/git health",
       "appliesTo": ["all"]
