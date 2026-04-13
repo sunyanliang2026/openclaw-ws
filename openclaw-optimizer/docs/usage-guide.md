@@ -27,6 +27,7 @@
 - `sync-task-summary-to-brain.sh`：将任务摘要 JSON 转成 brain markdown 并导入 gbrain
 - `capture-brain-note.sh`：把普通问答/直接 Codex 会话摘要写入 brain
 - `codex-brain-exec.sh`：包装 `codex exec`，自动把最终结论写入 brain
+- `brain-first-agent.sh`：本地问答入口，先查 `gbrain` 再把上下文交给 `openclaw agent`
 - `capture-feishu-turn-to-brain.sh`：普通 Feishu 问答的 durable-signal 摘要写入器；现已被 live gateway 自动调用
 - `feishu-turn-wrapper.sh`：本地测试或手工驱动 Feishu turn 的统一入口
 - `apply-feishu-brain-capture-patch.sh`：在 OpenClaw 升级后，重新把普通 Feishu 问答自动入脑补丁打回 live gateway monitor
@@ -256,6 +257,21 @@ cp /home/ubuntu/.openclaw/workspace/openclaw-optimizer/config/task-schema.exampl
   --title "示例标题" \
   --body "只写可复用结论，不写全文聊天记录。"
 ```
+
+本地强制 brain-first 问答入口：
+
+```bash
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/brain-first-agent.sh \
+  --message "What did we decide about Feishu auto-capture?" \
+  --json
+```
+
+行为：
+
+- 先执行 `gbrain ask`
+- 再执行 `gbrain search`
+- 把两段结果注入 agent prompt
+- 最后调用 `openclaw agent`
 
 普通 Feishu 问答自动入脑：
 

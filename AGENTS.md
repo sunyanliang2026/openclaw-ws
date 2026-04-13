@@ -117,6 +117,28 @@ Reactions are lightweight social signals. Humans use them constantly — they sa
 
 Skills provide your tools. When you need one, check its `SKILL.md`. Keep local notes (camera names, SSH details, voice preferences) in `TOOLS.md`.
 
+### Brain-First Retrieval
+
+For informational requests, always check `gbrain` before answering from general memory.
+
+Retrieval order:
+
+1. `gbrain ask '<question>' --no-expand`
+2. `gbrain search '<question>'`
+3. workspace memory and rules
+4. runtime logs, task state, external search
+
+Rules:
+
+- If `gbrain` already answers the question, answer from it directly.
+- If `gbrain` is partial, say what it covers and then fill the gap from other sources.
+- Do not skip `gbrain` for project decisions, task history, prior constraints, or prior conversation conclusions.
+- Do not pretend you checked `gbrain` if you did not.
+
+Local CLI shortcut:
+
+`/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/brain-first-agent.sh --message '<question>'`
+
 ### Feishu /newtask Dispatch
 
 When a Feishu message starts with `/newtask`, treat it as a task creation command.

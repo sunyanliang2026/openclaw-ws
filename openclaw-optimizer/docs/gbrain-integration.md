@@ -187,6 +187,25 @@ Follow this order when handling a new request:
 3. runtime logs and task state
 4. external APIs or web search
 
+For a local hard-enforced entrypoint, use:
+
+`[brain-first-agent.sh](/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/brain-first-agent.sh)`
+
+Example:
+
+```bash
+/home/ubuntu/.openclaw/workspace/openclaw-optimizer/scripts/brain-first-agent.sh \
+  --message "What did we decide about Feishu auto-capture?" \
+  --json
+```
+
+What it does:
+
+- runs `gbrain ask` first
+- runs `gbrain search` second
+- injects both results into the agent prompt
+- then calls `openclaw agent`
+
 ## Operational notes
 
 - Current brain path: `/home/ubuntu/brain`
